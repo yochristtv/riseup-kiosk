@@ -11,7 +11,7 @@
       --card2:#141423;
       --text:#f7f7ff;
       --muted:#b9b9d3;
-      --line:rgba(255,255,255,.12);
+      --line:rgba(255,255,255,.10);
       --btn:#ffffff;
       --btnText:#0b0b10;
       --accent:#7df0ff;
@@ -19,41 +19,47 @@
       --ok:#66f2a2;
       --shadow:0 10px 30px rgba(0,0,0,.35);
       --radius:18px;
-      --input:#0f0f18;
     }
+
     *{ box-sizing:border-box; }
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(1200px 600px at 20% 0%, rgba(125,240,255,.15), transparent 50%),
-                  radial-gradient(900px 500px at 80% 10%, rgba(102,242,162,.10), transparent 55%),
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(125,240,255,.14), transparent 55%),
+                  radial-gradient(900px 500px at 85% 10%, rgba(102,242,162,.10), transparent 55%),
                   var(--bg);
       color:var(--text);
     }
     .wrap{ max-width:1100px; margin:0 auto; padding:18px; }
     header{
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      padding:16px 18px; border:1px solid var(--line); border-radius:var(--radius);
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      padding:14px 16px;
+      border:1px solid var(--line);
+      border-radius:var(--radius);
       background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       box-shadow:var(--shadow);
     }
-    .title{ display:flex; flex-direction:column; gap:2px; }
-    .title h1{ margin:0; font-size:18px; letter-spacing:.3px; }
-    .title .sub{ color:var(--muted); font-size:12px; }
+    .brand{ display:flex; flex-direction:column; gap:2px; }
+    .brand h1{ margin:0; font-size:18px; letter-spacing:.3px; }
+    .brand .sub{ color:var(--muted); font-size:12px; }
+
     .tabs{ display:flex; gap:8px; flex-wrap:wrap; }
-    .tabbtn{
+    .tab{
+      appearance:none;
       border:1px solid var(--line);
       background:rgba(255,255,255,.03);
       color:var(--text);
       padding:10px 12px;
       border-radius:14px;
       cursor:pointer;
-      font-weight:650;
+      font-weight:700;
       font-size:13px;
     }
-    .tabbtn.active{ border-color:rgba(125,240,255,.55); box-shadow:0 0 0 3px rgba(125,240,255,.12); }
+    .tab.active{ border-color:rgba(125,240,255,.55); box-shadow:0 0 0 3px rgba(125,240,255,.12); }
+
     .grid{ display:grid; grid-template-columns: 1.15fr .85fr; gap:14px; margin-top:14px; }
     @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
+
     .card{
       border:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
@@ -62,6 +68,7 @@
       padding:16px;
     }
     .card h2{ margin:0 0 10px; font-size:16px; }
+    .muted{ color:var(--muted); font-size:12px; }
     label{ display:block; margin:10px 0 6px; color:var(--muted); font-size:12px; }
     input, select, textarea{
       width:100%;
@@ -72,9 +79,11 @@
       color:var(--text);
       outline:none;
     }
-    textarea{ min-height:80px; resize:vertical; }
-    .row{ display:flex; gap:10px; }
-    .row > *{ flex:1; }
+    textarea{ min-height:84px; resize:vertical; }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; }
+    .row > *{ flex:1; min-width:240px; }
+
     .btn{
       width:100%;
       margin-top:12px;
@@ -84,33 +93,48 @@
       cursor:pointer;
       background:var(--btn);
       color:var(--btnText);
-      font-weight:800;
+      font-weight:900;
       letter-spacing:.2px;
     }
     .btn.secondary{
       background:rgba(255,255,255,.08);
       color:var(--text);
       border:1px solid var(--line);
+      font-weight:800;
     }
+
     .pill{
       display:inline-flex; align-items:center; gap:8px;
-      padding:8px 10px; border-radius:999px;
-      border:1px solid var(--line); background:rgba(255,255,255,.03);
-      color:var(--muted); font-size:12px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:12px;
+      user-select:none;
     }
     .status{ margin-top:10px; font-size:13px; color:var(--muted); }
-    .ok{ color:var(--ok); font-weight:700; }
-    .bad{ color:var(--danger); font-weight:700; }
-    table{ width:100%; border-collapse:collapse; }
-    th, td{
-      border-bottom:1px solid var(--line);
-      padding:10px 8px;
-      font-size:12px;
-      vertical-align:top;
+    .ok{ color:var(--ok); font-weight:800; }
+    .bad{ color:var(--danger); font-weight:800; }
+
+    table{ width:100%; border-collapse:collapse; margin-top:12px; }
+    th, td{ border-bottom:1px solid var(--line); padding:10px 8px; font-size:12px; vertical-align:top; }
+    th{ text-align:left; color:var(--muted); font-weight:800; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+    .panel{ display:none; }
+    .panel.active{ display:block; }
+
+    .listCard{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      background:rgba(255,255,255,.03);
+      margin-top:10px;
     }
-    th{ text-align:left; color:var(--muted); font-weight:700; }
-    .small{ font-size:12px; color:var(--muted); }
-    .hidden{ display:none !important; }
+    .listHeader{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:baseline; }
+    .tiny{ font-size:12px; color:var(--muted); opacity:.95; }
+
     .adminBox{
       border:1px solid var(--line);
       background:rgba(255,255,255,.03);
@@ -118,195 +142,184 @@
       padding:12px;
       margin-top:10px;
     }
-    .listCard{
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px;
-      background:rgba(255,255,255,.03);
-      margin-bottom:10px;
-    }
-    .listHeader{
-      display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
-      align-items:baseline;
-    }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
   </style>
 </head>
 
 <body>
   <div class="wrap">
     <header>
-      <div class="title">
+      <div class="brand">
         <h1>RiseUp Volunteer Kiosk</h1>
-        <div class="sub">Local-only storage (Option A) • Tracks work dates • Admin can edit times</div>
+        <div class="sub">Local-only storage • Reports include days logged in • Admin can edit times</div>
       </div>
       <div class="tabs">
-        <button class="tabbtn active" data-tab="kiosk">Kiosk</button>
-        <button class="tabbtn" data-tab="reports">Reports</button>
-        <button class="tabbtn" data-tab="admin">Admin</button>
+        <button class="tab active" data-tab="kiosk">Kiosk</button>
+        <button class="tab" data-tab="reports">Reports</button>
+        <button class="tab" data-tab="admin">Admin</button>
       </div>
     </header>
 
     <!-- KIOSK -->
-    <section id="tab-kiosk" class="grid">
-      <div class="card">
-        <h2>Clock In / Out</h2>
+    <section class="panel active" id="panel-kiosk">
+      <div class="grid">
+        <div class="card">
+          <h2>Clock In / Out</h2>
 
-        <label>Volunteer Name</label>
-        <input id="name" placeholder="e.g., Jamie Smith" autocomplete="off" />
+          <label>Volunteer Name</label>
+          <input id="name" placeholder="e.g., Jamie Smith" autocomplete="off" />
 
-        <div class="row">
-          <div>
-            <label>Role</label>
-            <select id="role">
-              <option value="Front of House">Front of House</option>
-              <option value="Concessions">Concessions</option>
-              <option value="Usher">Usher</option>
-              <option value="Box Office">Box Office</option>
-              <option value="Stage Crew">Stage Crew</option>
-              <option value="Other">Other</option>
-            </select>
+          <div class="row">
+            <div>
+              <label>Role</label>
+              <select id="role">
+                <option value="Front of House">Front of House</option>
+                <option value="Concessions">Concessions</option>
+                <option value="Usher">Usher</option>
+                <option value="Box Office">Box Office</option>
+                <option value="Stage Crew">Stage Crew</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label>Today</label>
+              <div class="pill" id="todayPill">—</div>
+            </div>
           </div>
-          <div>
-            <label>Today</label>
-            <div class="pill" id="todayPill">—</div>
-          </div>
+
+          <label>Notes (optional)</label>
+          <textarea id="notes" placeholder="Anything helpful (optional)"></textarea>
+
+          <button class="btn" id="clockInBtn">Clock In</button>
+          <button class="btn secondary" id="clockOutBtn">Clock Out (for this name)</button>
+
+          <div class="status" id="kioskStatus"></div>
         </div>
 
-        <label>Notes (optional)</label>
-        <textarea id="notes" placeholder="Anything helpful (optional)"></textarea>
-
-        <button class="btn" id="clockInBtn">Clock In</button>
-        <button class="btn secondary" id="clockOutBtn">Clock Out (for this name)</button>
-
-        <div class="status" id="kioskStatus"></div>
-      </div>
-
-      <div class="card">
-        <h2>Quick View</h2>
-        <div class="small">Currently clocked in</div>
-        <div id="activeList" style="margin-top:10px;"></div>
+        <div class="card">
+          <h2>Currently Clocked In</h2>
+          <div class="muted">Open shifts</div>
+          <div id="activeList"></div>
+        </div>
       </div>
     </section>
 
     <!-- REPORTS -->
-    <section id="tab-reports" class="card hidden">
-      <h2>Reports</h2>
-
-      <div class="row">
-        <div>
-          <label>Filter by name (optional)</label>
-          <input id="reportFilter" placeholder="Type a name to filter…" autocomplete="off" />
-        </div>
-        <div>
-          <label>Actions</label>
-          <div class="row">
-            <button class="btn secondary" id="exportCsvBtn" style="margin-top:0;">Export CSV</button>
-            <button class="btn secondary" id="clearAllBtn" style="margin-top:0;">Clear All Data</button>
+    <section class="panel" id="panel-reports">
+      <div class="card">
+        <h2>Reports</h2>
+        <div class="row">
+          <div>
+            <label>Filter by name (optional)</label>
+            <input id="reportFilter" placeholder="Type a name to filter…" autocomplete="off" />
+          </div>
+          <div>
+            <label>Actions</label>
+            <div class="row" style="gap:10px;">
+              <button class="btn secondary" id="exportCsvBtn" style="margin-top:0;">Export CSV</button>
+              <button class="btn secondary" id="clearAllBtn" style="margin-top:0;">Clear All Data</button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div style="margin-top:14px;">
+        <!-- SUMMARY (includes Days Logged In) -->
         <table>
           <thead>
             <tr>
-              <th style="width:20%;">Volunteer</th>
-              <th style="width:10%;">Days Logged In</th>
-              <th>Dates (unique)</th>
-              <th style="width:22%;">Total Hours</th>
+              <th style="width:22%;">Volunteer</th>
+              <th style="width:10%;">Days</th>
+              <th>Days Logged In (unique dates)</th>
+              <th style="width:12%;">Total Hours</th>
             </tr>
           </thead>
-          <tbody id="reportTbody"></tbody>
+          <tbody id="summaryTbody"></tbody>
         </table>
-      </div>
 
-      <div style="margin-top:16px;">
-        <h2 style="margin-top:0;">All Shifts (raw)</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Name</th>
-              <th>Role</th>
-              <th>Clock In</th>
-              <th>Clock Out</th>
-              <th>Hours</th>
-            </tr>
-          </thead>
-          <tbody id="rawTbody"></tbody>
-        </table>
+        <div style="margin-top:18px;">
+          <h2 style="margin:0 0 6px;">All Shifts</h2>
+          <div class="muted">Each row is a shift record (admin edits reflect here)</div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width:12%;">Work Date</th>
+                <th style="width:18%;">Name</th>
+                <th style="width:16%;">Role</th>
+                <th>Clock In</th>
+                <th>Clock Out</th>
+                <th style="width:10%;">Hours</th>
+              </tr>
+            </thead>
+            <tbody id="rawTbody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
     <!-- ADMIN -->
-    <section id="tab-admin" class="card hidden">
-      <h2>Admin</h2>
+    <section class="panel" id="panel-admin">
+      <div class="card">
+        <h2>Admin</h2>
 
-      <div class="adminBox">
-        <div class="small">This is a simple local password gate (not high security). Anyone with access to this computer + browser could access localStorage.</div>
-        <label>Admin Password</label>
-        <input id="adminPass" type="password" placeholder="Enter password…" />
-        <button class="btn" id="adminLoginBtn">Unlock Admin Tools</button>
-        <div class="status" id="adminStatus"></div>
-      </div>
+        <div class="adminBox">
+          <div class="muted">
+            Simple password gate (local only). If you need real security, we’d move storage server-side.
+          </div>
+          <label>Admin Password</label>
+          <input id="adminPass" type="password" placeholder="Enter password…" />
+          <button class="btn" id="adminLoginBtn">Unlock Admin Tools</button>
+          <div class="status" id="adminStatus"></div>
+        </div>
 
-      <div id="adminTools" class="hidden" style="margin-top:14px;">
-        <div class="pill">Admin mode: <span class="ok">ON</span></div>
+        <div id="adminTools" style="display:none; margin-top:14px;">
+          <div class="pill">Admin mode: <span class="ok">ON</span></div>
 
-        <div style="margin-top:14px;">
-          <h2 style="margin:0 0 10px;">Edit Times</h2>
-          <div class="small">Edit any shift’s Clock In / Clock Out. Work Date auto-updates from Clock In.</div>
-          <div style="margin-top:10px;" id="adminEditList"></div>
+          <!-- Admin time editor (THIS is the “edit times” feature) -->
+          <div style="margin-top:14px;">
+            <h2 style="margin:0 0 8px;">Edit Times</h2>
+            <div class="muted">Edit Clock In / Clock Out. Work Date automatically updates from Clock In.</div>
+            <div id="adminEditList" style="margin-top:10px;"></div>
+          </div>
         </div>
       </div>
     </section>
   </div>
 
 <script>
-  /***************
-   * STORAGE
-   ***************/
-  const STORAGE_KEY = "riseup_kiosk_entries_v1"; // change if you already used a different key
-  const ADMIN_PASSWORD = "riseup"; // <- change this
+  /***********************
+   * SETTINGS
+   ***********************/
+  const STORAGE_KEY = "riseup_volunteer_kiosk_entries"; // keep stable
+  const ADMIN_PASSWORD = "riseup"; // <-- CHANGE THIS
 
-  function loadEntries() {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  }
-  function saveEntries(entries) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-  }
-
-  /***************
-   * HELPERS
-   ***************/
+  /***********************
+   * HELPERS (date/time)
+   ***********************/
   function ymdLocal(d = new Date()) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
     return `${y}-${m}-${day}`;
   }
-  function nowIso() {
-    return new Date().toISOString();
-  }
+  function nowIso() { return new Date().toISOString(); }
+
   function fmtLocal(iso) {
     if (!iso) return "";
     const d = new Date(iso);
     return d.toLocaleString([], { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
   }
-  function hoursBetween(clockInIso, clockOutIso) {
-    if (!clockInIso || !clockOutIso) return 0;
-    const ms = new Date(clockOutIso) - new Date(clockInIso);
-    return ms > 0 ? ms / 3600000 : 0;
+  function hoursBetween(inIso, outIso) {
+    if (!inIso || !outIso) return 0;
+    const ms = new Date(outIso) - new Date(inIso);
+    return ms > 0 ? (ms / 3600000) : 0;
   }
-  function round2(n) { return Math.round(n * 100) / 100; }
+  function round2(n){ return Math.round(n * 100) / 100; }
+
   function escapeHtml(s) {
     return String(s ?? "").replace(/[&<>"']/g, c => ({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
     }[c]));
   }
 
-  // datetime-local conversions
+  // Admin editor input conversions
   function isoToLocalInputValue(iso) {
     if (!iso) return "";
     const d = new Date(iso);
@@ -315,14 +328,21 @@
   }
   function localInputValueToIso(val) {
     if (!val) return null;
-    // "YYYY-MM-DDTHH:MM" interpreted as local time
-    const d = new Date(val);
-    return d.toISOString();
+    // datetime-local is interpreted as local time by Date()
+    return new Date(val).toISOString();
   }
 
-  /***************
-   * BACKFILL (adds missing id/workDate for older data)
-   ***************/
+  /***********************
+   * STORAGE
+   ***********************/
+  function loadEntries() {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  }
+  function saveEntries(entries) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  // Backfill: ensure id + workDate exist for old records
   function backfillWorkDateAndId() {
     const entries = loadEntries();
     let changed = false;
@@ -338,16 +358,15 @@
     if (changed) saveEntries(entries);
   }
 
-  /***************
-   * KIOSK ACTIONS
-   ***************/
+  /***********************
+   * KIOSK
+   ***********************/
   function findActiveByName(name) {
     const entries = loadEntries();
-    // last open shift for this name
-    const open = entries
-      .filter(e => (e.name || "").toLowerCase() === name.toLowerCase() && !e.clockOut)
-      .sort((a,b) => (b.clockIn||"").localeCompare(a.clockIn||""))[0];
-    return open || null;
+    const n = name.toLowerCase();
+    return entries
+      .filter(e => (e.name || "").toLowerCase() === n && !e.clockOut)
+      .sort((a,b) => (b.clockIn || "").localeCompare(a.clockIn || ""))[0] || null;
   }
 
   function clockIn() {
@@ -356,58 +375,65 @@
     const notes = document.getElementById("notes").value.trim();
     const status = document.getElementById("kioskStatus");
 
-    if (!name) { status.innerHTML = `<span class="bad">Name is required.</span>`; return; }
+    if (!name) {
+      status.innerHTML = `<span class="bad">Name is required.</span>`;
+      return;
+    }
 
-    // prevent double-open shift
-    const existing = findActiveByName(name);
-    if (existing) {
-      status.innerHTML = `<span class="bad">${escapeHtml(name)}</span> is already clocked in (since ${fmtLocal(existing.clockIn)}).`;
+    const already = findActiveByName(name);
+    if (already) {
+      status.innerHTML = `<span class="bad">${escapeHtml(name)}</span> is already clocked in (since ${fmtLocal(already.clockIn)}).`;
       return;
     }
 
     const entries = loadEntries();
-    const entry = {
+    entries.push({
       id: crypto.randomUUID(),
       name,
       role,
       notes,
-      workDate: ymdLocal(),     // ✅ day they logged in
+      workDate: ymdLocal(),     // ✅ ADDED: day they logged in
       clockIn: nowIso(),
       clockOut: null
-    };
-    entries.push(entry);
+    });
     saveEntries(entries);
 
     status.innerHTML = `<span class="ok">Clocked in:</span> ${escapeHtml(name)} (${escapeHtml(role)})`;
+    document.getElementById("notes").value = "";
     renderActiveList();
     renderReports();
-    document.getElementById("notes").value = "";
+    if (isAdminUnlocked) renderAdminEditList();
   }
 
   function clockOut() {
     const name = document.getElementById("name").value.trim();
     const status = document.getElementById("kioskStatus");
 
-    if (!name) { status.innerHTML = `<span class="bad">Enter the name to clock out.</span>`; return; }
+    if (!name) {
+      status.innerHTML = `<span class="bad">Enter the name to clock out.</span>`;
+      return;
+    }
 
     const entries = loadEntries();
-    const open = entries
-      .map((e, idx) => ({ e, idx }))
-      .filter(x => (x.e.name || "").toLowerCase() === name.toLowerCase() && !x.e.clockOut)
-      .sort((a,b) => (b.e.clockIn||"").localeCompare(a.e.clockIn||""))[0];
+    const n = name.toLowerCase();
+    const idx = entries
+      .map((e,i) => ({e,i}))
+      .filter(x => (x.e.name || "").toLowerCase() === n && !x.e.clockOut)
+      .sort((a,b) => (b.e.clockIn || "").localeCompare(a.e.clockIn || ""))[0]?.i;
 
-    if (!open) {
+    if (idx === undefined) {
       status.innerHTML = `<span class="bad">No active shift found for</span> ${escapeHtml(name)}.`;
       return;
     }
 
-    entries[open.idx].clockOut = nowIso();
+    entries[idx].clockOut = nowIso();
     saveEntries(entries);
 
-    const hrs = round2(hoursBetween(entries[open.idx].clockIn, entries[open.idx].clockOut));
+    const hrs = round2(hoursBetween(entries[idx].clockIn, entries[idx].clockOut));
     status.innerHTML = `<span class="ok">Clocked out:</span> ${escapeHtml(name)} • ${hrs} hrs`;
     renderActiveList();
     renderReports();
+    if (isAdminUnlocked) renderAdminEditList();
   }
 
   function renderActiveList() {
@@ -415,79 +441,69 @@
     const entries = loadEntries();
     const active = entries
       .filter(e => !e.clockOut)
-      .sort((a,b) => (b.clockIn||"").localeCompare(a.clockIn||""));
+      .sort((a,b) => (b.clockIn || "").localeCompare(a.clockIn || ""));
 
     if (!active.length) {
-      wrap.innerHTML = `<div class="small">No one is currently clocked in.</div>`;
+      wrap.innerHTML = `<div class="listCard"><div class="muted">No one is currently clocked in.</div></div>`;
       return;
     }
 
     wrap.innerHTML = active.map(e => `
       <div class="listCard">
         <div class="listHeader">
-          <div><strong>${escapeHtml(e.name)}</strong> <span class="small">(${escapeHtml(e.role || "")})</span></div>
-          <div class="small">In: ${fmtLocal(e.clockIn)}</div>
+          <div><strong>${escapeHtml(e.name)}</strong> <span class="tiny">(${escapeHtml(e.role || "")})</span></div>
+          <div class="tiny">In: ${fmtLocal(e.clockIn)}</div>
         </div>
-        <div class="small">Work Date: ${escapeHtml(e.workDate || "")}</div>
+        <div class="tiny">Work Date: <span class="mono">${escapeHtml(e.workDate || "")}</span></div>
       </div>
     `).join("");
   }
 
-  /***************
-   * REPORTS (Days Logged In + Totals)
-   ***************/
-  function buildVolunteerReport(entries) {
+  /***********************
+   * REPORTS (includes Days Logged In)
+   ***********************/
+  function summarizeByVolunteer(entries) {
     const map = new Map();
 
     for (const e of entries) {
-      const name = (e.name || "Unknown").trim() || "Unknown";
+      const name = (e.name || "").trim() || "Unknown";
       if (!map.has(name)) map.set(name, { name, days: new Set(), hours: 0 });
       const v = map.get(name);
-      if (e.workDate) v.days.add(e.workDate);
 
-      if (e.clockIn && e.clockOut) {
-        v.hours += hoursBetween(e.clockIn, e.clockOut);
-      }
+      if (e.workDate) v.days.add(e.workDate);               // ✅ ADDED: days logged in
+      if (e.clockIn && e.clockOut) v.hours += hoursBetween(e.clockIn, e.clockOut);
     }
 
     return [...map.values()]
       .map(v => ({
         name: v.name,
         daysCount: v.days.size,
-        daysList: [...v.days].sort(),
+        daysList: [...v.days].sort(),                       // ✅ ADDED: list of unique dates
         totalHours: round2(v.hours)
       }))
       .sort((a,b) => a.name.localeCompare(b.name));
   }
 
   function renderReports() {
-    const filter = document.getElementById("reportFilter")?.value?.trim().toLowerCase() || "";
-    const tbody = document.getElementById("reportTbody");
+    const filter = (document.getElementById("reportFilter")?.value || "").trim().toLowerCase();
+    const summaryTbody = document.getElementById("summaryTbody");
     const rawTbody = document.getElementById("rawTbody");
 
-    if (!tbody || !rawTbody) return;
+    const all = loadEntries();
+    const entries = filter ? all.filter(e => (e.name || "").toLowerCase().includes(filter)) : all;
 
-    const entries = loadEntries();
+    const summary = summarizeByVolunteer(entries);
 
-    const filteredEntries = filter
-      ? entries.filter(e => (e.name||"").toLowerCase().includes(filter))
-      : entries;
-
-    const summary = buildVolunteerReport(filteredEntries);
-
-    tbody.innerHTML = summary.length ? summary.map(v => `
+    summaryTbody.innerHTML = summary.length ? summary.map(v => `
       <tr>
         <td><strong>${escapeHtml(v.name)}</strong></td>
         <td>${v.daysCount}</td>
         <td class="mono">${escapeHtml(v.daysList.join(", "))}</td>
         <td>${v.totalHours}</td>
       </tr>
-    `).join("") : `<tr><td colspan="4" class="small">No data.</td></tr>`;
+    `).join("") : `<tr><td colspan="4" class="muted">No data.</td></tr>`;
 
-    const raw = filteredEntries
-      .slice()
-      .sort((a,b) => (b.clockIn||"").localeCompare(a.clockIn||""));
-
+    const raw = entries.slice().sort((a,b) => (b.clockIn || "").localeCompare(a.clockIn || ""));
     rawTbody.innerHTML = raw.length ? raw.map(e => {
       const hrs = e.clockIn && e.clockOut ? round2(hoursBetween(e.clockIn, e.clockOut)) : "";
       return `
@@ -500,13 +516,15 @@
           <td>${hrs}</td>
         </tr>
       `;
-    }).join("") : `<tr><td colspan="6" class="small">No data.</td></tr>`;
+    }).join("") : `<tr><td colspan="6" class="muted">No data.</td></tr>`;
   }
 
-  /***************
+  /***********************
    * ADMIN: EDIT TIMES
-   ***************/
-  function updateEntryTimes(entryId, newClockInIso, newClockOutIso) {
+   ***********************/
+  let isAdminUnlocked = false;
+
+  function adminUpdateTimes(entryId, newClockInIso, newClockOutIso) {
     const entries = loadEntries();
     const idx = entries.findIndex(e => e.id === entryId);
     if (idx === -1) return false;
@@ -514,7 +532,7 @@
     entries[idx].clockIn = newClockInIso;
     entries[idx].clockOut = newClockOutIso || null;
 
-    // keep workDate aligned with edited clockIn
+    // ✅ keep workDate aligned with edited clockIn
     entries[idx].workDate = ymdLocal(new Date(newClockInIso));
 
     saveEntries(entries);
@@ -523,53 +541,55 @@
 
   function renderAdminEditList() {
     const wrap = document.getElementById("adminEditList");
-    if (!wrap) return;
+    const entries = loadEntries().slice().sort((a,b) => (b.clockIn || "").localeCompare(a.clockIn || ""));
 
-    const entries = loadEntries()
-      .slice()
-      .sort((a,b) => (b.clockIn||"").localeCompare(a.clockIn||""));
+    if (!entries.length) {
+      wrap.innerHTML = `<div class="listCard"><div class="muted">No entries.</div></div>`;
+      return;
+    }
 
-    wrap.innerHTML = entries.length ? entries.map(e => `
+    wrap.innerHTML = entries.map(e => `
       <div class="listCard">
         <div class="listHeader">
           <div>
-            <div style="font-weight:800;">${escapeHtml(e.name || "")}</div>
-            <div class="small">Work Date: <span class="mono">${escapeHtml(e.workDate || "")}</span> • Role: ${escapeHtml(e.role || "")}</div>
+            <div><strong>${escapeHtml(e.name || "")}</strong> <span class="tiny">(${escapeHtml(e.role || "")})</span></div>
+            <div class="tiny">Work Date: <span class="mono">${escapeHtml(e.workDate || "")}</span></div>
           </div>
-          <div class="small mono">ID: ${escapeHtml(e.id || "")}</div>
+          <div class="tiny mono">ID: ${escapeHtml(e.id || "")}</div>
         </div>
 
         <div class="row" style="margin-top:10px;">
-          <div>
+          <div style="min-width:240px;">
             <label>Clock In</label>
-            <input data-id="${escapeHtml(e.id)}" data-field="in" type="datetime-local" value="${isoToLocalInputValue(e.clockIn)}" />
+            <input type="datetime-local" data-id="${escapeHtml(e.id)}" data-field="in" value="${isoToLocalInputValue(e.clockIn)}">
           </div>
-          <div>
+          <div style="min-width:240px;">
             <label>Clock Out</label>
-            <input data-id="${escapeHtml(e.id)}" data-field="out" type="datetime-local" value="${isoToLocalInputValue(e.clockOut)}" />
+            <input type="datetime-local" data-id="${escapeHtml(e.id)}" data-field="out" value="${isoToLocalInputValue(e.clockOut)}">
           </div>
         </div>
 
         <button class="btn secondary" data-save="${escapeHtml(e.id)}" style="margin-top:10px;">Save</button>
       </div>
-    `).join("") : `<div class="small">No entries found.</div>`;
+    `).join("");
 
-    wrap.querySelectorAll("button[data-save]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const id = btn.getAttribute("data-save");
+    wrap.querySelectorAll('button[data-save]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-save');
         const inEl  = wrap.querySelector(`input[data-id="${CSS.escape(id)}"][data-field="in"]`);
         const outEl = wrap.querySelector(`input[data-id="${CSS.escape(id)}"][data-field="out"]`);
 
         const newInIso = localInputValueToIso(inEl.value);
         const newOutIso = outEl.value ? localInputValueToIso(outEl.value) : null;
 
-        if (!newInIso) { alert("Clock In is required."); return; }
+        if (!newInIso) return alert("Clock In is required.");
         if (newOutIso && new Date(newOutIso) < new Date(newInIso)) {
-          alert("Clock Out can’t be before Clock In.");
-          return;
+          return alert("Clock Out can't be before Clock In.");
         }
 
-        updateEntryTimes(id, newInIso, newOutIso);
+        adminUpdateTimes(id, newInIso, newOutIso);
+
+        // refresh everything
         renderAdminEditList();
         renderActiveList();
         renderReports();
@@ -578,15 +598,15 @@
     });
   }
 
-  /***************
-   * CSV EXPORT + CLEAR
-   ***************/
+  /***********************
+   * EXPORT / CLEAR
+   ***********************/
   function exportCsv() {
     const entries = loadEntries();
     const headers = ["id","name","role","workDate","clockIn","clockOut","notes"];
     const rows = entries.map(e => headers.map(h => {
       const v = e[h] ?? "";
-      const s = String(v).replaceAll('"','""');
+      const s = String(v).replaceAll('"', '""');
       return `"${s}"`;
     }).join(","));
     const csv = [headers.join(","), ...rows].join("\n");
@@ -609,27 +629,27 @@
     backfillWorkDateAndId();
     renderActiveList();
     renderReports();
-    if (!document.getElementById("adminTools").classList.contains("hidden")) {
-      renderAdminEditList();
-    }
+    if (isAdminUnlocked) renderAdminEditList();
     alert("Cleared.");
   }
 
-  /***************
-   * TABS + INIT
-   ***************/
-  function setTab(tabName) {
-    document.querySelectorAll(".tabbtn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabName));
-    document.getElementById("tab-kiosk").classList.toggle("hidden", tabName !== "kiosk");
-    document.getElementById("tab-reports").classList.toggle("hidden", tabName !== "reports");
-    document.getElementById("tab-admin").classList.toggle("hidden", tabName !== "admin");
-    if (tabName === "reports") renderReports();
-    if (tabName === "admin" && !document.getElementById("adminTools").classList.contains("hidden")) renderAdminEditList();
+  /***********************
+   * TABS
+   ***********************/
+  function setTab(tab) {
+    document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+    document.getElementById("panel-kiosk").classList.toggle("active", tab === "kiosk");
+    document.getElementById("panel-reports").classList.toggle("active", tab === "reports");
+    document.getElementById("panel-admin").classList.toggle("active", tab === "admin");
+
+    if (tab === "reports") renderReports();
+    if (tab === "admin" && isAdminUnlocked) renderAdminEditList();
   }
 
-  // Wire up UI
-  document.querySelectorAll(".tabbtn").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
-
+  /***********************
+   * INIT + EVENTS
+   ***********************/
+  document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
   document.getElementById("clockInBtn").addEventListener("click", clockIn);
   document.getElementById("clockOutBtn").addEventListener("click", clockOut);
 
@@ -641,15 +661,16 @@
     const pass = document.getElementById("adminPass").value;
     const status = document.getElementById("adminStatus");
     if (pass === ADMIN_PASSWORD) {
+      isAdminUnlocked = true;
       status.innerHTML = `<span class="ok">Unlocked.</span>`;
-      document.getElementById("adminTools").classList.remove("hidden");
+      document.getElementById("adminTools").style.display = "block";
       renderAdminEditList();
     } else {
       status.innerHTML = `<span class="bad">Wrong password.</span>`;
     }
   });
 
-  // Init
+  // start
   document.getElementById("todayPill").textContent = ymdLocal();
   backfillWorkDateAndId();
   renderActiveList();
