@@ -1,0 +1,1114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>RiseUp Volunteer Kiosk</title>
+  <style>
+    :root{
+      --bg:#0b0b10;
+      --card:#10101a;
+      --card2:#141423;
+      --text:#f7f7ff;
+      --muted:#b9b9d3;
+      --line:rgba(255,255,255,.10);
+      --btn:#ffffff;
+      --btnText:#0b0b10;
+      --accent: #7df0ff;
+      --danger:#ff6b6b;
+      --ok:#66f2a2;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+
+    * { box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(1200px 700px at 25% 10%, rgba(125,240,255,.18), transparent 60%),
+                  radial-gradient(900px 500px at 80% 35%, rgba(255,105,180,.14), transparent 55%),
+                  radial-gradient(900px 700px at 40% 95%, rgba(255,210,85,.12), transparent 60%),
+                  var(--bg);
+      min-height: 100vh;
+    }
+
+    header{
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(11,11,16,.72);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .wrap{
+      max-width: 1000px;
+      margin:0 auto;
+      padding: 14px 14px 28px;
+    }
+
+    .brandRow{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      padding: 10px 0 6px;
+    }
+
+    .logo{
+      width:95px; height:95px;
+      border-radius: 14px;
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,.12);
+      background: #000;
+      flex: 0 0 auto;
+    }
+    .logo img{ width:100%; height:100%; object-fit: cover; display:block; }
+
+    .brandText h1{
+      margin:0;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+    .brandText .sub{
+      margin-top: 2px;
+      color: var(--muted);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .pillRow{
+      display:flex; flex-wrap: wrap; gap:10px;
+      margin: 10px 0 12px;
+    }
+    .pill{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      display:flex; gap:8px; align-items:center;
+    }
+    .pill b{ color: #fff; }
+
+    main .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 10px;
+    }
+    @media(min-width: 860px){
+      main .grid{ grid-template-columns: 1.2fr .8fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHead{
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(0,0,0,.10);
+    }
+    .cardHead h2{
+      margin:0;
+      font-size: 15px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+    .cardBody{ padding: 14px; }
+
+    .btnRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media(max-width: 520px){
+      .btnRow{ grid-template-columns: 1fr; }
+    }
+
+    button{
+      border: none;
+      border-radius: 16px;
+      padding: 16px 14px;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(0,0,0,.25);
+      transition: transform .06s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active{ transform: scale(.99); }
+
+    .primary{ background: var(--btn); color: var(--btnText); }
+    .ghost{ background: rgba(255,255,255,.08); color: var(--text); border: 1px solid var(--line); box-shadow: none; }
+    .danger{ background: rgba(255,107,107,.18); color: #fff; border: 1px solid rgba(255,107,107,.35); box-shadow: none; }
+    .ok{ background: rgba(102,242,162,.14); color: #fff; border: 1px solid rgba(102,242,162,.35); box-shadow: none; }
+    .small{ padding: 12px 12px; font-size: 15px; border-radius: 14px; }
+
+    /* FIXED: label/input/select blocks (was missing a closing brace in your version) */
+    label{
+      display:block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    input{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid #ffffff33;
+      background: rgba(255,255,255,.06);
+      color: #ffffff;
+      font-size: 16px;
+      outline:none;
+    }
+
+    select{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid #ffffff66;
+      background: #000000;
+      color: #ffffff;
+      font-size: 16px;
+      outline:none;
+    }
+
+    select option{
+      background: #000000;
+      color: #ffffff;
+    }
+
+    input::placeholder{ color: rgba(255,255,255,.45); }
+
+    .twoCol{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media(max-width: 640px){ .twoCol{ grid-template-columns:1fr; } }
+
+    .list{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .tile{
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: 12px;
+    }
+    .tile .name{
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .02em;
+    }
+    .tile .meta{
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+    .tile .right{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex: 0 0 auto;
+    }
+    .badge{
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.20);
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .badge.ok{ border-color: rgba(102,242,162,.35); background: rgba(102,242,162,.12); }
+    .badge.danger{ border-color: rgba(255,107,107,.35); background: rgba(255,107,107,.12); }
+
+    .divider{ height:1px; background: var(--line); margin: 12px 0; }
+
+    .hint{
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.82);
+      border: 1px solid rgba(255,255,255,.12);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      display:none;
+      z-index: 100;
+      max-width: calc(100% - 20px);
+    }
+
+    .modalBackdrop{
+      position: fixed; inset:0;
+      background: rgba(0,0,0,.75);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 20px;
+      z-index: 120;
+    }
+    .modal{
+      width: min(560px, 92%);
+      background: rgba(16,16,26,.96);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modalHead{
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .modalHead h3{
+      margin:0;
+      font-size: 14px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+    .modalBody{ padding: 14px; }
+    .modalActions{ padding: 14px; border-top: 1px solid var(--line); display:flex; gap: 10px; justify-content:flex-end; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brandRow">
+      <div class="logo" title="RiseUpTheatreCo">
+        <!-- Put Riseup.webp next to index.html -->
+        <img src="Riseup.webp" alt="RiseUpTheatreCo logo" onerror="this.style.display='none'; this.parentElement.style.background='#111';" />
+      </div>
+      <div class="brandText">
+        <h1>RISEUP</h1>
+        <div class="sub">THEATRE COMPANY • VOLUNTEER KIOSK</div>
+      </div>
+    </div>
+
+    <div class="pillRow">
+      <div class="pill"><b>Rounding:</b> up to next 0.1 hr</div>
+      <div class="pill"><b>In-Kind:</b> $28/hr</div>
+      <div class="pill"><b>Storage:</b> on this iPad</div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+
+    <!-- Left: Main actions -->
+    <section class="card">
+      <div class="cardHead">
+        <h2>Home</h2>
+      </div>
+      <div class="cardBody">
+        <div class="btnRow">
+          <button class="primary" id="btnAdd">Add Volunteer</button>
+          <button class="primary" id="btnClock">Sign In / Out</button>
+          <button class="ghost" id="btnReports">Reports (PDF)</button>
+          <button class="ghost" id="btnBackup">Backup / Restore</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="twoCol">
+          <div>
+            <label>Filter by Production</label>
+            <select id="homeProductionFilter"></select>
+          </div>
+          <div>
+            <label>Search by Last Name</label>
+            <input id="homeLastSearch" placeholder="Start typing last name..." />
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div>
+          <label>Currently Signed In</label>
+          <div class="hint">Tap a person below to sign them out fast (you’ll still get a confirmation).</div>
+          <div class="list" id="signedInList"></div>
+          <div class="hint" id="signedInEmpty" style="display:none; margin-top:10px;">Nobody is currently signed in.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: Quick info + admin -->
+    <aside class="card">
+      <div class="cardHead">
+        <h2>Quick Stats</h2>
+      </div>
+      <div class="cardBody">
+        <div class="list">
+          <div class="tile">
+            <div>
+              <div class="name" id="statVolunteers">0</div>
+              <div class="meta">Volunteers</div>
+            </div>
+            <div class="right"><span class="badge">All-time</span></div>
+          </div>
+          <div class="tile">
+            <div>
+              <div class="name" id="statSignedIn">0</div>
+              <div class="meta">Signed in now</div>
+            </div>
+            <div class="right"><span class="badge ok">Live</span></div>
+          </div>
+          <div class="tile">
+            <div>
+              <div class="name" id="statHours">0.0</div>
+              <div class="meta">Total hours (rounded)</div>
+            </div>
+            <div class="right"><span class="badge">$<span id="statValue">0</span></span></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="hint">
+          <b>Admin PIN:</b> default is <b>1234</b>. You can change it in Admin Settings.
+        </div>
+
+        <div style="margin-top:12px;" class="btnRow">
+          <button class="ghost small" id="btnAdminSettings">Admin Settings</button>
+          <button class="danger small" id="btnResetAll">Reset All Data</button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="modalBackdrop" id="modalBackdrop" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modalHead">
+      <h3 id="modalTitle"></h3>
+      <button class="ghost small" id="modalClose">Close</button>
+    </div>
+    <div class="modalBody" id="modalBody"></div>
+    <div class="modalActions" id="modalActions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/** =========================
+ *  CONFIG (edit these)
+ *  ========================= */
+const DEFAULT_PRODUCTIONS = ["Company", "TBA", "TBA", "TBA"];
+const IN_KIND_RATE = 28; // $/hr
+
+/** =========================
+ *  STORAGE
+ *  ========================= */
+const KEY = "riseup_volunteer_kiosk_v1";
+function loadState(){
+  const raw = localStorage.getItem(KEY);
+  if(!raw){
+    return {
+      adminPin: "1234",
+      productions: [...DEFAULT_PRODUCTIONS],
+      volunteers: [], // {id, first, last, createdAt}
+      logs: []        // {id, volunteerId, production, signIn, signOut, minutes, hoursRoundedUp}
+    };
+  }
+  try { return JSON.parse(raw); } catch { return null; }
+}
+function saveState(){
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
+let state = loadState();
+if(!state){
+  localStorage.removeItem(KEY);
+  state = loadState();
+}
+
+/** =========================
+ *  HELPERS
+ *  ========================= */
+const $ = (id)=>document.getElementById(id);
+
+function toast(msg){
+  const t = $("toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  clearTimeout(toast._tm);
+  toast._tm = setTimeout(()=> t.style.display="none", 2000);
+}
+
+function uid(){
+  return Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
+
+function norm(s){ return (s || "").trim(); }
+
+function titleCase(s){
+  s = norm(s);
+  if(!s) return s;
+  return s.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+}
+
+function roundUpTenth(hours){
+  // 1.43 -> 1.5
+  return Math.ceil(hours * 10) / 10;
+}
+
+function formatDateTime(ms){
+  const d = new Date(ms);
+  return d.toLocaleString([], { year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+}
+
+function openModal(title, bodyHTML, actions){
+  $("modalTitle").textContent = title;
+  $("modalBody").innerHTML = bodyHTML;
+  const act = $("modalActions");
+  act.innerHTML = "";
+  (actions || []).forEach(btn => act.appendChild(btn));
+  $("modalBackdrop").style.display = "flex";
+}
+
+function closeModal(){
+  $("modalBackdrop").style.display = "none";
+  $("modalBody").innerHTML = "";
+  $("modalActions").innerHTML = "";
+}
+
+$("modalClose").onclick = closeModal;
+$("modalBackdrop").addEventListener("click", (e)=>{
+  if(e.target === $("modalBackdrop")) closeModal();
+});
+
+function mkBtn(text, cls, onClick){
+  const b = document.createElement("button");
+  b.textContent = text;
+  b.className = cls || "ghost";
+  b.onclick = onClick;
+  return b;
+}
+
+function requirePin(okFn){
+  openModal("Admin PIN", `
+    <label>Enter PIN</label>
+    <input id="pinInput" type="password" inputmode="numeric" placeholder="PIN" />
+    <div class="hint" style="margin-top:8px;">Default PIN is 1234 (change it in Admin Settings).</div>
+  `, [
+    mkBtn("Cancel", "ghost", closeModal),
+    mkBtn("Continue", "primary", ()=>{
+      const pin = $("pinInput").value;
+      if(pin !== state.adminPin) { toast("Wrong PIN"); return; }
+      closeModal();
+      okFn();
+    })
+  ]);
+  setTimeout(()=> $("pinInput")?.focus(), 50);
+}
+
+function productionOptionsHTML(selected){
+  return state.productions.map(p => `<option value="${escapeHtml(p)}" ${p===selected?"selected":""}>${escapeHtml(p)}</option>`).join("");
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/** =========================
+ *  CORE LOGIC
+ *  ========================= */
+function addVolunteer(first, last){
+  first = titleCase(first);
+  last = titleCase(last);
+  const id = uid();
+  state.volunteers.push({ id, first, last, createdAt: Date.now() });
+  saveState();
+  return id;
+}
+
+function findVolunteer(id){ return state.volunteers.find(v => v.id === id); }
+
+function isSignedIn(volunteerId){
+  return state.logs.some(l => l.volunteerId === volunteerId && !l.signOut);
+}
+
+function getOpenLog(volunteerId){
+  return state.logs.find(l => l.volunteerId === volunteerId && !l.signOut) || null;
+}
+
+function signIn(volunteerId, production){
+  if(isSignedIn(volunteerId)) return { ok:false, msg:"Already signed in." };
+  const log = { id: uid(), volunteerId, production, signIn: Date.now(), signOut: null, minutes: null, hoursRoundedUp: null };
+  state.logs.push(log);
+  saveState();
+  return { ok:true };
+}
+
+function signOut(volunteerId){
+  const log = getOpenLog(volunteerId);
+  if(!log) return { ok:false, msg:"No open sign-in found." };
+  const end = Date.now();
+  const minutes = Math.max(0, Math.round((end - log.signIn) / 60000));
+  const hours = minutes / 60;
+  const rounded = roundUpTenth(hours);
+
+  log.signOut = end;
+  log.minutes = minutes;
+  log.hoursRoundedUp = rounded;
+  saveState();
+  return { ok:true, minutes, rounded };
+}
+
+/** =========================
+ *  UI RENDER
+ *  ========================= */
+function renderHome(){
+  // Fill home filters
+  const prodFilter = $("homeProductionFilter");
+  const selected = prodFilter.value || "ALL";
+  prodFilter.innerHTML = `<option value="ALL">All Productions</option>` + state.productions.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("");
+  // Restore selection if possible
+  prodFilter.value = (selected === "ALL" || state.productions.includes(selected)) ? selected : "ALL";
+
+  // Signed-in list
+  const qLast = norm($("homeLastSearch").value).toLowerCase();
+  const pSel = prodFilter.value;
+
+  const openLogs = state.logs.filter(l => !l.signOut);
+  const items = openLogs
+    .map(l => ({ log:l, v: findVolunteer(l.volunteerId) }))
+    .filter(x => x.v)
+    .filter(x => !qLast || x.v.last.toLowerCase().startsWith(qLast))
+    .filter(x => pSel === "ALL" || x.log.production === pSel)
+    .sort((a,b)=> (a.v.last+a.v.first).localeCompare(b.v.last+b.v.first));
+
+  const list = $("signedInList");
+  list.innerHTML = "";
+  $("signedInEmpty").style.display = items.length ? "none" : "block";
+
+  items.forEach(({log, v})=>{
+    const el = document.createElement("div");
+    el.className = "tile";
+    el.innerHTML = `
+      <div>
+        <div class="name">${escapeHtml(v.first)} ${escapeHtml(v.last)}</div>
+        <div class="meta">${escapeHtml(log.production)} • Signed in: ${escapeHtml(formatDateTime(log.signIn))}</div>
+      </div>
+      <div class="right">
+        <span class="badge ok">SIGNED IN</span>
+        <button class="danger small">Sign Out</button>
+      </div>
+    `;
+    el.querySelector("button").onclick = ()=> confirmSignOut(v.id, v, log);
+    list.appendChild(el);
+  });
+
+  // Stats
+  $("statVolunteers").textContent = state.volunteers.length;
+  $("statSignedIn").textContent = openLogs.length;
+
+  const totalHours = state.logs
+    .filter(l=> l.signOut && typeof l.hoursRoundedUp === "number")
+    .reduce((sum,l)=> sum + l.hoursRoundedUp, 0);
+
+  $("statHours").textContent = totalHours.toFixed(1);
+  $("statValue").textContent = Math.round(totalHours * IN_KIND_RATE).toLocaleString();
+}
+
+function confirmAddVolunteer(){
+  openModal("Add Volunteer", `
+    <div class="twoCol">
+      <div>
+        <label>First Name</label>
+        <input id="addFirst" placeholder="First name" />
+      </div>
+      <div>
+        <label>Last Name</label>
+        <input id="addLast" placeholder="Last name" />
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="hint">After you type your name, you’ll confirm the spelling.</div>
+    </div>
+  `, [
+    mkBtn("Cancel", "ghost", closeModal),
+    mkBtn("Continue", "primary", ()=>{
+      const first = norm($("addFirst").value);
+      const last  = norm($("addLast").value);
+      if(!first || !last){ toast("Please enter first and last name."); return; }
+
+      const firstT = titleCase(first);
+      const lastT  = titleCase(last);
+
+      openModal("Confirm Spelling", `
+        <div class="hint">Is this correct?</div>
+        <div style="margin-top:10px; font-size:26px; font-weight:900;">${escapeHtml(firstT)} ${escapeHtml(lastT)}</div>
+      `, [
+        mkBtn("Edit", "ghost", confirmAddVolunteer),
+        mkBtn("Yes, Save", "primary", ()=>{
+          addVolunteer(firstT, lastT);
+          closeModal();
+          toast("Added!");
+          renderHome();
+        })
+      ]);
+    })
+  ]);
+  setTimeout(()=> $("addFirst")?.focus(), 50);
+}
+
+function openClockScreen(){
+  openModal("Sign In / Sign Out", `
+    <div class="twoCol">
+      <div>
+        <label>Production</label>
+        <select id="clockProd">${productionOptionsHTML(state.productions[0])}</select>
+      </div>
+      <div>
+        <label>Search by Last Name</label>
+        <input id="clockSearch" placeholder="Type last name..." />
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="hint">Tap your name, then choose Sign In or Sign Out (you’ll confirm).</div>
+    <div class="list" id="clockList" style="margin-top:10px;"></div>
+    <div class="hint" id="clockEmpty" style="display:none; margin-top:10px;">No matches.</div>
+  `, [
+    mkBtn("Done", "primary", ()=>{ closeModal(); renderHome(); })
+  ]);
+
+  function renderClockList(){
+    const q = norm($("clockSearch").value).toLowerCase();
+    const prod = $("clockProd").value;
+
+    const people = state.volunteers
+      .filter(v => !q || v.last.toLowerCase().startsWith(q))
+      .sort((a,b)=> (a.last+a.first).localeCompare(b.last+b.first));
+
+    const list = $("clockList");
+    list.innerHTML = "";
+    $("clockEmpty").style.display = people.length ? "none" : "block";
+
+    people.forEach(v=>{
+      const signed = isSignedIn(v.id);
+      const open = getOpenLog(v.id);
+
+      const el = document.createElement("div");
+      el.className = "tile";
+      el.innerHTML = `
+        <div>
+          <div class="name">${escapeHtml(v.first)} ${escapeHtml(v.last)}</div>
+          <div class="meta">${signed ? (escapeHtml(open.production) + " • Signed in: " + escapeHtml(formatDateTime(open.signIn))) : "Not signed in"}</div>
+        </div>
+        <div class="right">
+          ${signed ? `<span class="badge ok">SIGNED IN</span><button class="danger small">Sign Out</button>`
+                   : `<span class="badge">READY</span><button class="ok small">Sign In</button>`}
+        </div>
+      `;
+      const btn = el.querySelector("button");
+      if(signed){
+        btn.onclick = ()=> confirmSignOut(v.id, v, open);
+      }else{
+        btn.onclick = ()=> confirmSignIn(v.id, v, prod);
+      }
+      list.appendChild(el);
+    });
+  }
+
+  $("clockSearch").addEventListener("input", renderClockList);
+  $("clockProd").addEventListener("change", renderClockList);
+  renderClockList();
+  setTimeout(()=> $("clockSearch")?.focus(), 50);
+}
+
+function confirmSignIn(volunteerId, v, production){
+  openModal("Confirm Sign In", `
+    <div style="font-size:22px; font-weight:900;">${escapeHtml(v.first)} ${escapeHtml(v.last)}</div>
+    <div class="hint" style="margin-top:6px;">Production: <b>${escapeHtml(production)}</b></div>
+  `, [
+    mkBtn("Cancel", "ghost", closeModal),
+    mkBtn("Confirm Sign In", "primary", ()=>{
+      const res = signIn(volunteerId, production);
+      if(!res.ok){ toast(res.msg); return; }
+      closeModal();
+      toast("Signed in!");
+      renderHome();
+    })
+  ]);
+}
+
+function confirmSignOut(volunteerId, v, openLog){
+  const prod = openLog?.production || "";
+  openModal("Confirm Sign Out", `
+    <div style="font-size:22px; font-weight:900;">${escapeHtml(v.first)} ${escapeHtml(v.last)}</div>
+    <div class="hint" style="margin-top:6px;">Production: <b>${escapeHtml(prod)}</b></div>
+    <div class="hint" style="margin-top:6px;">Signed in: ${escapeHtml(formatDateTime(openLog.signIn))}</div>
+  `, [
+    mkBtn("Cancel", "ghost", closeModal),
+    mkBtn("Confirm Sign Out", "danger", ()=>{
+      const res = signOut(volunteerId);
+      if(!res.ok){ toast(res.msg); return; }
+      closeModal();
+      toast(`Signed out • ${res.rounded.toFixed(1)} hrs`);
+      renderHome();
+    })
+  ]);
+}
+
+function openReports(){
+  openModal("Reports (Print to PDF)", `
+    <div class="twoCol">
+      <div>
+        <label>Production</label>
+        <select id="repProd">
+          <option value="ALL">All Productions</option>
+          ${state.productions.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("")}
+        </select>
+      </div>
+      <div>
+        <label>Search Last Name</label>
+        <input id="repLast" placeholder="Optional..." />
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="hint">
+      This report uses <b>rounded hours</b> (up to the next 0.1 hr). In-kind value is <b>$${IN_KIND_RATE}/hr</b>.
+      Tap <b>Generate PDF</b>, then choose <b>Print</b> → <b>Save as PDF</b> (or Share → Print on iPad).
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="list" id="repPreview"></div>
+  `, [
+    mkBtn("Close", "ghost", closeModal),
+    mkBtn("Generate PDF", "primary", ()=> generatePrintableReport())
+  ]);
+
+  function computeTotals(prodSel, lastQuery){
+    const totals = new Map();
+
+    const logs = state.logs.filter(l => l.signOut && typeof l.hoursRoundedUp === "number")
+      .filter(l => prodSel === "ALL" || l.production === prodSel);
+
+    logs.forEach(l=>{
+      const v = findVolunteer(l.volunteerId);
+      if(!v) return;
+      if(lastQuery && !v.last.toLowerCase().startsWith(lastQuery)) return;
+
+      if(!totals.has(v.id)){
+        totals.set(v.id, { v, hoursByProd: new Map(), totalHours: 0 });
+      }
+      const row = totals.get(v.id);
+      row.totalHours += l.hoursRoundedUp;
+      row.hoursByProd.set(l.production, (row.hoursByProd.get(l.production) || 0) + l.hoursRoundedUp);
+    });
+
+    return Array.from(totals.values()).sort((a,b)=> (a.v.last+a.v.first).localeCompare(b.v.last+b.v.first));
+  }
+
+  function renderPreview(){
+    const prodSel = $("repProd").value;
+    const lastQuery = norm($("repLast").value).toLowerCase();
+    const rows = computeTotals(prodSel, lastQuery);
+
+    const prev = $("repPreview");
+    prev.innerHTML = "";
+    if(rows.length === 0){
+      prev.innerHTML = `<div class="hint">No completed sessions found for this filter yet.</div>`;
+      return;
+    }
+
+    rows.slice(0, 12).forEach(r=>{
+      const value = r.totalHours * IN_KIND_RATE;
+      const el = document.createElement("div");
+      el.className = "tile";
+      el.innerHTML = `
+        <div>
+          <div class="name">${escapeHtml(r.v.first)} ${escapeHtml(r.v.last)}</div>
+          <div class="meta">${prodSel === "ALL" ? "All productions" : escapeHtml(prodSel)} • ${r.totalHours.toFixed(1)} hrs • $${value.toFixed(0)}</div>
+        </div>
+        <div class="right"><span class="badge">$${value.toFixed(0)}</span></div>
+      `;
+      prev.appendChild(el);
+    });
+
+    if(rows.length > 12){
+      const more = document.createElement("div");
+      more.className = "hint";
+      more.style.marginTop = "8px";
+      more.textContent = `Previewing 12 of ${rows.length} volunteers. PDF includes all.`;
+      prev.appendChild(more);
+    }
+  }
+
+  $("repProd").addEventListener("change", renderPreview);
+  $("repLast").addEventListener("input", renderPreview);
+  renderPreview();
+
+  openReports._computeTotals = computeTotals;
+}
+
+function generatePrintableReport(){
+  const prodSel = $("repProd").value;
+  const lastQuery = norm($("repLast").value).toLowerCase();
+  const rows = openReports._computeTotals(prodSel, lastQuery);
+
+  const now = new Date();
+  const title = prodSel === "ALL" ? "All Productions" : prodSel;
+
+  const styles = `
+    <style>
+      body{ font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 28px; color:#111; }
+      h1{ margin: 0 0 6px; letter-spacing:.04em; text-transform: uppercase; }
+      .sub{ color:#444; margin-bottom: 16px; }
+      .meta{ color:#444; font-size: 12px; margin-bottom: 16px; }
+      table{ width:100%; border-collapse: collapse; margin-top: 10px; }
+      th, td{ border:1px solid #ccc; padding: 8px; font-size: 12px; }
+      th{ background:#f3f3f3; text-align:left; }
+      .right{ text-align:right; }
+      .totals{ margin-top: 14px; font-size: 13px; }
+      .totals b{ font-size: 14px; }
+      @media print{ body{ margin: 14mm; } }
+    </style>
+  `;
+
+  let prodCols = [];
+  if(prodSel === "ALL"){ prodCols = [...state.productions]; }
+  else { prodCols = [prodSel]; }
+
+  let grandHours = 0;
+
+  const headerCols = `
+    <th>Volunteer</th>
+    ${prodCols.map(p=>`<th class="right">${escapeHtml(p)} (hrs)</th>`).join("")}
+    <th class="right">Total (hrs)</th>
+    <th class="right">In-Kind ($)</th>
+  `;
+
+  const bodyRows = rows.map(r=>{
+    const per = prodCols.map(p => (r.hoursByProd.get(p) || 0));
+    const total = r.totalHours;
+    const value = total * IN_KIND_RATE;
+    grandHours += total;
+
+    return `
+      <tr>
+        <td>${escapeHtml(r.v.last)}, ${escapeHtml(r.v.first)}</td>
+        ${per.map(h=>`<td class="right">${h.toFixed(1)}</td>`).join("")}
+        <td class="right"><b>${total.toFixed(1)}</b></td>
+        <td class="right">$${value.toFixed(0)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const grandValue = grandHours * IN_KIND_RATE;
+
+  const html = `
+    <!doctype html>
+    <html><head><meta charset="utf-8" />${styles}</head>
+    <body>
+      <h1>RiseUp Theatre Company</h1>
+      <div class="sub">Volunteer Hours Report — <b>${escapeHtml(title)}</b></div>
+      <div class="meta">
+        Generated: ${now.toLocaleString()}<br/>
+        Rounding: up to next 0.1 hr • In-Kind Rate: $${IN_KIND_RATE}/hr
+      </div>
+
+      <table>
+        <thead><tr>${headerCols}</tr></thead>
+        <tbody>${bodyRows || `<tr><td colspan="${prodCols.length+3}">No data.</td></tr>`}</tbody>
+      </table>
+
+      <div class="totals">
+        <b>Grand Total:</b> ${grandHours.toFixed(1)} hours • <b>In-Kind Value:</b> $${grandValue.toFixed(0)}
+      </div>
+    </body></html>
+  `;
+
+  const w = window.open("", "_blank");
+  if(!w){ toast("Pop-up blocked. Allow pop-ups, then try again."); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(()=> w.print(), 400);
+}
+
+function openBackupRestore(){
+  openModal("Backup / Restore", `
+    <div class="hint">
+      Backup downloads a file you can save to iCloud/Drive. Restore loads that file back into this kiosk.
+    </div>
+    <div class="divider"></div>
+
+    <div class="btnRow">
+      <button class="primary" id="dlBackup">Download Backup</button>
+      <button class="ghost" id="upRestore">Restore from File</button>
+    </div>
+
+    <input type="file" id="restoreFile" accept="application/json" style="display:none;" />
+  `, [
+    mkBtn("Done", "primary", ()=>{ closeModal(); renderHome(); })
+  ]);
+
+  $("dlBackup").onclick = ()=>{
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type:"application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `RiseUpVolunteerBackup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    toast("Backup downloaded");
+  };
+
+  $("upRestore").onclick = ()=> $("restoreFile").click();
+
+  $("restoreFile").onchange = async (e)=>{
+    const file = e.target.files?.[0];
+    if(!file) return;
+    const text = await file.text();
+    try{
+      const obj = JSON.parse(text);
+      if(!obj || !Array.isArray(obj.volunteers) || !Array.isArray(obj.logs) || !Array.isArray(obj.productions)){
+        toast("That file doesn't look like a RiseUp backup.");
+        return;
+      }
+      state = obj;
+      saveState();
+      toast("Restored!");
+      closeModal();
+      renderHome();
+    }catch{
+      toast("Could not read that file.");
+    }
+  };
+}
+
+function openAdminSettings(){
+  requirePin(()=>{
+    openModal("Admin Settings", `
+      <div class="twoCol">
+        <div>
+          <label>Change Admin PIN</label>
+          <input id="newPin" type="password" inputmode="numeric" placeholder="New PIN" />
+        </div>
+        <div>
+          <label>Confirm PIN</label>
+          <input id="newPin2" type="password" inputmode="numeric" placeholder="Confirm PIN" />
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <label>Productions (comma separated)</label>
+      <input id="prodList" placeholder="Company, TBA, ..." />
+
+      <div class="hint" style="margin-top:10px;">
+        Tip: Keep production names short so they look great on the kiosk.
+      </div>
+    `, [
+      mkBtn("Cancel", "ghost", closeModal),
+      mkBtn("Save", "primary", ()=>{
+        const p1 = $("newPin").value.trim();
+        const p2 = $("newPin2").value.trim();
+        if((p1 || p2) && (p1 !== p2)){ toast("PINs do not match."); return; }
+        if(p1 && p1.length < 4){ toast("PIN should be at least 4 digits."); return; }
+
+        const prods = $("prodList").value
+          .split(",")
+          .map(s=>titleCase(s))
+          .map(s=>s.trim())
+          .filter(Boolean);
+
+        if(prods.length === 0){ toast("Please enter at least one production."); return; }
+
+        if(p1) state.adminPin = p1;
+        state.productions = prods;
+
+        saveState();
+        closeModal();
+        toast("Saved!");
+        renderHome();
+      })
+    ]);
+
+    $("prodList").value = state.productions.join(", ");
+  });
+}
+
+function resetAllData(){
+  requirePin(()=>{
+    openModal("Reset Everything?", `
+      <div class="hint" style="color:#fff;">
+        This will permanently delete <b>all volunteers</b> and <b>all logs</b> on this kiosk.
+        Do this only if you’re starting completely over.
+      </div>
+    `, [
+      mkBtn("Cancel", "ghost", closeModal),
+      mkBtn("Yes, Reset", "danger", ()=>{
+        localStorage.removeItem(KEY);
+        state = loadState();
+        closeModal();
+        toast("Reset complete");
+        renderHome();
+      })
+    ]);
+  });
+}
+
+/** =========================
+ *  BUTTON WIRING
+ *  ========================= */
+$("btnAdd").onclick = confirmAddVolunteer;
+$("btnClock").onclick = openClockScreen;
+$("btnReports").onclick = openReports;
+$("btnBackup").onclick = openBackupRestore;
+$("btnAdminSettings").onclick = openAdminSettings;
+$("btnResetAll").onclick = resetAllData;
+
+$("homeProductionFilter").addEventListener("change", renderHome);
+$("homeLastSearch").addEventListener("input", renderHome);
+
+/** =========================
+ *  INITIAL RENDER
+ *  ========================= */
+renderHome();
+</script>
+</body>
+</html>
