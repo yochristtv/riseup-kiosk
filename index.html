@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>RiseUp Volunteer Kiosk</title>
+
   <style>
     :root{
       --bg:#0b0b10;
@@ -14,667 +15,1567 @@
       --line:rgba(255,255,255,.10);
       --btn:#ffffff;
       --btnText:#0b0b10;
-      --accent:#7df0ff;
+      --accent: #7df0ff;
       --danger:#ff6b6b;
       --ok:#66f2a2;
-      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
       --radius:18px;
     }
 
-    *{ box-sizing:border-box; }
+    * { box-sizing: border-box; }
     body{
       margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(1200px 600px at 20% 0%, rgba(125,240,255,.14), transparent 55%),
-                  radial-gradient(900px 500px at 85% 10%, rgba(102,242,162,.10), transparent 55%),
+      font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(1200px 700px at 25% 10%, rgba(125,240,255,.18), transparent 60%),
+                  radial-gradient(900px 500px at 80% 35%, rgba(255,105,180,.14), transparent 55%),
+                  radial-gradient(900px 700px at 40% 95%, rgba(255,210,85,.12), transparent 60%),
                   var(--bg);
-      color:var(--text);
+      min-height: 100vh;
     }
-    .wrap{ max-width:1100px; margin:0 auto; padding:18px; }
+
+    /* ===== LOGIN OVERLAY (NEW) ===== */
+    #loginOverlay{
+      position: fixed;
+      inset: 0;
+      display: none;            /* shown by JS */
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 9999;
+      background: rgba(0,0,0,.70);
+      backdrop-filter: blur(10px);
+    }
+    .loginCard{
+      width: min(680px, 94vw);
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+      overflow: hidden;
+    }
+    .loginHead{
+      padding: 18px 18px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: 12px;
+    }
+    .loginHead .title{
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 14px;
+      margin: 0;
+    }
+    .loginHead .badge{
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .loginBody{
+      padding: 18px;
+    }
+    .loginHero{
+      display:flex;
+      gap: 14px;
+      align-items:center;
+      margin-bottom: 12px;
+    }
+    .loginLogo{
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.14);
+      background: #000;
+      box-shadow: var(--shadow);
+      flex: 0 0 auto;
+      display:grid;
+      place-items:center;
+    }
+    .loginLogo img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .loginBig{
+      font-size: 26px;
+      font-weight: 950;
+      margin: 0;
+      line-height: 1.05;
+      letter-spacing: .02em;
+    }
+    .loginSub{
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .loginGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .loginActions{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      align-items:center;
+    }
+    .loginError{
+      display:none;
+      margin-top: 10px;
+      color: #ffd2d2;
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .loginHint{
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .loginActions button{
+      border: none;
+      border-radius: 16px;
+      padding: 14px 14px;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(0,0,0,.25);
+      transition: transform .06s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .loginActions button:active{ transform: scale(.99); }
+    .loginPrimary{ background: var(--btn); color: var(--btnText); }
+    .loginGhost{ background: rgba(255,255,255,.08); color: var(--text); border: 1px solid var(--line); box-shadow: none; }
+
+    /* Hide kiosk until authed */
+    #kioskApp{ display:none; }
+    body.authed #kioskApp{ display:block; }
+
+    /* ===== KIOSK STYLES (YOUR ORIGINAL) ===== */
+
     header{
-      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
-      padding:14px 16px;
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      box-shadow:var(--shadow);
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(11,11,16,.72);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
     }
-    .brand{ display:flex; flex-direction:column; gap:2px; }
-    .brand h1{ margin:0; font-size:18px; letter-spacing:.3px; }
-    .brand .sub{ color:var(--muted); font-size:12px; }
 
-    .tabs{ display:flex; gap:8px; flex-wrap:wrap; }
-    .tab{
-      appearance:none;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:14px;
-      cursor:pointer;
-      font-weight:700;
-      font-size:13px;
+    /* FULL-WIDTH after login (changed from max-width: 1000px) */
+    .wrap{
+      max-width: 100%;
+      margin:0 auto;
+      padding: 14px 14px 28px;
     }
-    .tab.active{ border-color:rgba(125,240,255,.55); box-shadow:0 0 0 3px rgba(125,240,255,.12); }
 
-    .grid{ display:grid; grid-template-columns: 1.15fr .85fr; gap:14px; margin-top:14px; }
-    @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
+    .brandRow{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap:18px;
+      padding: 10px 0 6px;
+    }
+
+    .brandLeft{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      min-width: 0;
+    }
+
+    .logo{
+      width:95px; height:95px;
+      border-radius: 14px;
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,.12);
+      background: #000;
+      flex: 0 0 auto;
+    }
+    .logo img{ width:100%; height:100%; object-fit: cover; display:block; }
+
+    .brandText h1{
+      margin:0;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+    .brandText .sub{
+      margin-top: 2px;
+      color: var(--muted);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .pillRow{
+      display:flex; flex-wrap: wrap; gap:10px;
+      margin: 10px 0 12px;
+    }
+    .pill{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      display:flex; gap:8px; align-items:center;
+    }
+    .pill b{ color: #fff; }
+
+    main .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 10px;
+    }
+    @media(min-width: 860px){
+      main .grid{ grid-template-columns: 1.2fr .8fr; }
+    }
 
     .card{
-      border:1px solid var(--line);
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
     }
-    .card h2{ margin:0 0 10px; font-size:16px; }
-    .muted{ color:var(--muted); font-size:12px; }
-    label{ display:block; margin:10px 0 6px; color:var(--muted); font-size:12px; }
-    input, select, textarea{
+    .cardHead{
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(0,0,0,.10);
+    }
+    .cardHead h2{
+      margin:0;
+      font-size: 15px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+    .cardBody{ padding: 14px; }
+
+    .btnRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media(max-width: 520px){
+      .btnRow{ grid-template-columns: 1fr; }
+    }
+
+    button{
+      border: none;
+      border-radius: 16px;
+      padding: 16px 14px;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(0,0,0,.25);
+      transition: transform .06s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active{ transform: scale(.99); }
+
+    .primary{ background: var(--btn); color: var(--btnText); }
+    .ghost{ background: rgba(255,255,255,.08); color: var(--text); border: 1px solid var(--line); box-shadow: none; }
+    .danger{ background: rgba(255,107,107,.18); color: #fff; border: 1px solid rgba(255,107,107,.35); box-shadow: none; }
+    .ok{ background: rgba(102,242,162,.14); color: #fff; border: 1px solid rgba(102,242,162,.35); box-shadow: none; }
+    .small{ padding: 12px 12px; font-size: 15px; border-radius: 14px; }
+
+    label{
+      display:block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    input{
       width:100%;
-      padding:12px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(15,15,24,.75);
-      color:var(--text);
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid #ffffff33;
+      background: rgba(255,255,255,.06);
+      color: #ffffff;
+      font-size: 16px;
       outline:none;
     }
-    textarea{ min-height:84px; resize:vertical; }
 
-    .row{ display:flex; gap:10px; flex-wrap:wrap; }
-    .row > *{ flex:1; min-width:240px; }
-
-    .btn{
+    select{
       width:100%;
-      margin-top:12px;
-      padding:12px 14px;
-      border:0;
-      border-radius:14px;
-      cursor:pointer;
-      background:var(--btn);
-      color:var(--btnText);
-      font-weight:900;
-      letter-spacing:.2px;
-    }
-    .btn.secondary{
-      background:rgba(255,255,255,.08);
-      color:var(--text);
-      border:1px solid var(--line);
-      font-weight:800;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid #ffffff66;
+      background: #000000;
+      color: #ffffff;
+      font-size: 16px;
+      outline:none;
     }
 
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      color:var(--muted);
-      font-size:12px;
-      user-select:none;
+    select option{
+      background: #000000;
+      color: #ffffff;
     }
-    .status{ margin-top:10px; font-size:13px; color:var(--muted); }
-    .ok{ color:var(--ok); font-weight:800; }
-    .bad{ color:var(--danger); font-weight:800; }
 
-    table{ width:100%; border-collapse:collapse; margin-top:12px; }
-    th, td{ border-bottom:1px solid var(--line); padding:10px 8px; font-size:12px; vertical-align:top; }
-    th{ text-align:left; color:var(--muted); font-weight:800; }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    input::placeholder{ color: rgba(255,255,255,.45); }
 
-    .panel{ display:none; }
-    .panel.active{ display:block; }
-
-    .listCard{
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px;
-      background:rgba(255,255,255,.03);
-      margin-top:10px;
+    .twoCol{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
     }
-    .listHeader{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:baseline; }
-    .tiny{ font-size:12px; color:var(--muted); opacity:.95; }
+    @media(max-width: 640px){ .twoCol{ grid-template-columns:1fr; } }
 
-    .adminBox{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      border-radius:14px;
-      padding:12px;
-      margin-top:10px;
+    .list{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 10px;
     }
+
+    .tile{
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: 12px;
+    }
+    .tile .name{
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .02em;
+    }
+    .tile .meta{
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+    .tile .right{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex: 0 0 auto;
+    }
+    .badge{
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.20);
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .badge.ok{ border-color: rgba(102,242,162,.35); background: rgba(102,242,162,.12); }
+    .badge.danger{ border-color: rgba(255,107,107,.35); background: rgba(255,107,107,.12); }
+
+    .divider{ height:1px; background: var(--line); margin: 12px 0; }
+
+    .hint{
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.82);
+      border: 1px solid rgba(255,255,255,.12);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      display:none;
+      z-index: 100;
+      max-width: calc(100% - 20px);
+    }
+
+    .modalBackdrop{
+      position: fixed; inset:0;
+      background: rgba(0,0,0,.75);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 20px;
+      z-index: 120;
+    }
+    .modal{
+      width: min(560px, 92%);
+      background: rgba(16,16,26,.96);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modalHead{
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .modalHead h3{
+      margin:0;
+      font-size: 14px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+    .modalBody{ padding: 14px; }
+    .modalActions{ padding: 14px; border-top: 1px solid var(--line); display:flex; gap: 10px; justify-content:flex-end; flex-wrap: wrap; }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <h1>RiseUp Volunteer Kiosk</h1>
-        <div class="sub">Local-only storage • Reports include days logged in • Admin can edit times</div>
+
+  <!-- ===== LOGIN OVERLAY (NEW) ===== -->
+  <div id="loginOverlay" aria-label="RiseUp Private Access">
+    <div class="loginCard">
+      <div class="loginHead">
+        <p class="title">RiseUp Private Access</p>
+        <span class="badge">Passcode required</span>
       </div>
-      <div class="tabs">
-        <button class="tab active" data-tab="kiosk">Kiosk</button>
-        <button class="tab" data-tab="reports">Reports</button>
-        <button class="tab" data-tab="admin">Admin</button>
+      <div class="loginBody">
+        <div class="loginHero">
+          <div class="loginLogo" title="RiseUpTheatreCo">
+            <img src="Riseup.webp" alt="RiseUpTheatreCo logo"
+                 onerror="this.style.display='none'; this.parentElement.style.background='#111';" />
+          </div>
+          <div>
+            <p class="loginBig">Volunteer Kiosk</p>
+            <p class="loginSub">Enter the passcode to open the kiosk. Ask the Stage Manager for the current passcode.</p>
+          </div>
+        </div>
+
+        <div class="loginGrid">
+          <label for="loginPass">Passcode</label>
+          <input id="loginPass" type="password" placeholder="Enter passcode" autocomplete="off" />
+        </div>
+
+        <div class="loginActions">
+          <button class="loginPrimary" id="loginBtn">Enter</button>
+          <button class="loginGhost" id="loginClear" type="button">Clear</button>
+        </div>
+
+        <div class="loginError" id="loginErr">Incorrect passcode.</div>
+        <div class="loginHint">Tip: On iPad kiosk setups, you can keep the tab open—refresh will ask again.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== KIOSK APP (YOUR ORIGINAL CONTENT) ===== -->
+  <div id="kioskApp">
+    <header>
+      <div class="wrap">
+        <div class="brandRow">
+          <div class="brandLeft">
+            <div class="logo" title="RiseUpTheatreCo">
+              <!-- Put Riseup.webp next to index.html -->
+              <img src="Riseup.webp" alt="RiseUpTheatreCo logo" onerror="this.style.display='none'; this.parentElement.style.background='#111';" />
+            </div>
+            <div class="brandText">
+              <h1>RISEUP</h1>
+              <div class="sub">THEATRE COMPANY • VOLUNTEER KIOSK</div>
+            </div>
+          </div>
+
+          <!-- NEW: Sign Out (forces passcode again) -->
+          <button class="ghost small" id="btnSiteSignOut" type="button">Sign Out</button>
+        </div>
+
+        <div class="pillRow">
+          <div class="pill"><b>Rounding:</b> up to next 0.1 hr</div>
+          <div class="pill"><b>In-Kind:</b> $28/hr</div>
+          <div class="pill"><b>Storage:</b> on this iPad</div>
+        </div>
       </div>
     </header>
 
-    <!-- KIOSK -->
-    <section class="panel active" id="panel-kiosk">
+    <main class="wrap">
       <div class="grid">
-        <div class="card">
-          <h2>Clock In / Out</h2>
 
-          <label>Volunteer Name</label>
-          <input id="name" placeholder="e.g., Jamie Smith" autocomplete="off" />
+        <!-- Left: Main actions -->
+        <section class="card">
+          <div class="cardHead">
+            <h2>Home</h2>
+          </div>
+          <div class="cardBody">
+            <div class="btnRow">
+              <button class="primary" id="btnAdd">Add Volunteer</button>
+              <button class="primary" id="btnClock">Sign In / Out</button>
+              <button class="ghost" id="btnReports">Reports (PDF)</button>
+              <button class="ghost" id="btnBackup">Backup / Restore</button>
+            </div>
 
-          <div class="row">
+            <div class="divider"></div>
+
+            <div class="twoCol">
+              <div>
+                <label>Filter by Production</label>
+                <select id="homeProductionFilter"></select>
+              </div>
+              <div>
+                <label>Search by Last Name</label>
+                <input id="homeLastSearch" placeholder="Start typing last name..." />
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
             <div>
-              <label>Role</label>
-              <select id="role">
-                <option value="Front of House">Front of House</option>
-                <option value="Concessions">Concessions</option>
-                <option value="Usher">Usher</option>
-                <option value="Box Office">Box Office</option>
-                <option value="Stage Crew">Stage Crew</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label>Today</label>
-              <div class="pill" id="todayPill">—</div>
+              <label>Currently Signed In</label>
+              <div class="hint">Tap a person below to sign them out fast (you’ll still get a confirmation).</div>
+              <div class="list" id="signedInList"></div>
+              <div class="hint" id="signedInEmpty" style="display:none; margin-top:10px;">Nobody is currently signed in.</div>
             </div>
           </div>
+        </section>
 
-          <label>Notes (optional)</label>
-          <textarea id="notes" placeholder="Anything helpful (optional)"></textarea>
-
-          <button class="btn" id="clockInBtn">Clock In</button>
-          <button class="btn secondary" id="clockOutBtn">Clock Out (for this name)</button>
-
-          <div class="status" id="kioskStatus"></div>
-        </div>
-
-        <div class="card">
-          <h2>Currently Clocked In</h2>
-          <div class="muted">Open shifts</div>
-          <div id="activeList"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- REPORTS -->
-    <section class="panel" id="panel-reports">
-      <div class="card">
-        <h2>Reports</h2>
-        <div class="row">
-          <div>
-            <label>Filter by name (optional)</label>
-            <input id="reportFilter" placeholder="Type a name to filter…" autocomplete="off" />
+        <!-- Right: Quick info + admin -->
+        <aside class="card">
+          <div class="cardHead">
+            <h2>Quick Stats</h2>
           </div>
-          <div>
-            <label>Actions</label>
-            <div class="row" style="gap:10px;">
-              <button class="btn secondary" id="exportCsvBtn" style="margin-top:0;">Export CSV</button>
-              <button class="btn secondary" id="clearAllBtn" style="margin-top:0;">Clear All Data</button>
+          <div class="cardBody">
+            <div class="list">
+              <div class="tile">
+                <div>
+                  <div class="name" id="statVolunteers">0</div>
+                  <div class="meta">Volunteers</div>
+                </div>
+                <div class="right"><span class="badge">All-time</span></div>
+              </div>
+              <div class="tile">
+                <div>
+                  <div class="name" id="statSignedIn">0</div>
+                  <div class="meta">Signed in now</div>
+                </div>
+                <div class="right"><span class="badge ok">Live</span></div>
+              </div>
+              <div class="tile">
+                <div>
+                  <div class="name" id="statHours">0.0</div>
+                  <div class="meta">Total hours (rounded)</div>
+                </div>
+                <div class="right"><span class="badge">$<span id="statValue">0</span></span></div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="hint">
+          
+            </div>
+
+            <div style="margin-top:12px;" class="btnRow">
+              <button class="ghost small" id="btnAdminSettings">Admin Settings</button>
+              <button class="danger small" id="btnResetAll">Reset All Data</button>
             </div>
           </div>
-        </div>
+        </aside>
 
-        <!-- SUMMARY (includes Days Logged In) -->
-        <table>
-          <thead>
-            <tr>
-              <th style="width:22%;">Volunteer</th>
-              <th style="width:10%;">Days</th>
-              <th>Days Logged In (unique dates)</th>
-              <th style="width:12%;">Total Hours</th>
-            </tr>
-          </thead>
-          <tbody id="summaryTbody"></tbody>
-        </table>
-
-        <div style="margin-top:18px;">
-          <h2 style="margin:0 0 6px;">All Shifts</h2>
-          <div class="muted">Each row is a shift record (admin edits reflect here)</div>
-          <table>
-            <thead>
-              <tr>
-                <th style="width:12%;">Work Date</th>
-                <th style="width:18%;">Name</th>
-                <th style="width:16%;">Role</th>
-                <th>Clock In</th>
-                <th>Clock Out</th>
-                <th style="width:10%;">Hours</th>
-              </tr>
-            </thead>
-            <tbody id="rawTbody"></tbody>
-          </table>
-        </div>
       </div>
-    </section>
+    </main>
 
-    <!-- ADMIN -->
-    <section class="panel" id="panel-admin">
-      <div class="card">
-        <h2>Admin</h2>
-
-        <div class="adminBox">
-          <div class="muted">
-            Simple password gate (local only). If you need real security, we’d move storage server-side.
-          </div>
-          <label>Admin Password</label>
-          <input id="adminPass" type="password" placeholder="Enter password…" />
-          <button class="btn" id="adminLoginBtn">Unlock Admin Tools</button>
-          <div class="status" id="adminStatus"></div>
+    <!-- Modal -->
+    <div class="modalBackdrop" id="modalBackdrop" role="dialog" aria-modal="true">
+      <div class="modal">
+        <div class="modalHead">
+          <h3 id="modalTitle"></h3>
+          <button class="ghost small" id="modalClose">Close</button>
         </div>
-
-        <div id="adminTools" style="display:none; margin-top:14px;">
-          <div class="pill">Admin mode: <span class="ok">ON</span></div>
-
-          <!-- Admin time editor (THIS is the “edit times” feature) -->
-          <div style="margin-top:14px;">
-            <h2 style="margin:0 0 8px;">Edit Times</h2>
-            <div class="muted">Edit Clock In / Clock Out. Work Date automatically updates from Clock In.</div>
-            <div id="adminEditList" style="margin-top:10px;"></div>
-          </div>
-        </div>
+        <div class="modalBody" id="modalBody"></div>
+        <div class="modalActions" id="modalActions"></div>
       </div>
-    </section>
+    </div>
+
+    <div class="toast" id="toast"></div>
   </div>
 
-<script>
-  /***********************
-   * SETTINGS
-   ***********************/
-  const STORAGE_KEY = "riseup_volunteer_kiosk_entries"; // keep stable
-  const ADMIN_PASSWORD = "riseup"; // <-- CHANGE THIS
+  <script>
+    /** =========================
+     *  LOGIN GATE (NEW)
+     *  ========================= */
+    const SITE_PASSCODE = "RiseUp2026";
 
-  /***********************
-   * HELPERS (date/time)
-   ***********************/
-  function ymdLocal(d = new Date()) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  }
-  function nowIso() { return new Date().toISOString(); }
+    const loginOverlay = document.getElementById("loginOverlay");
+    const kioskApp = document.getElementById("kioskApp");
+    const loginPass = document.getElementById("loginPass");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginClear = document.getElementById("loginClear");
+    const loginErr = document.getElementById("loginErr");
+    const btnSiteSignOut = document.getElementById("btnSiteSignOut");
 
-  function fmtLocal(iso) {
-    if (!iso) return "";
-    const d = new Date(iso);
-    return d.toLocaleString([], { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
-  }
-  function hoursBetween(inIso, outIso) {
-    if (!inIso || !outIso) return 0;
-    const ms = new Date(outIso) - new Date(inIso);
-    return ms > 0 ? (ms / 3600000) : 0;
-  }
-  function round2(n){ return Math.round(n * 100) / 100; }
+    function showGate(){
+      document.body.classList.remove("authed");
+      kioskApp.style.display = "none";
+      loginOverlay.style.display = "flex";
+      loginErr.style.display = "none";
+      loginPass.value = "";
+      setTimeout(() => loginPass.focus(), 50);
+    }
 
-  function escapeHtml(s) {
-    return String(s ?? "").replace(/[&<>"']/g, c => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[c]));
-  }
+    function showKiosk(){
+      loginOverlay.style.display = "none";
+      kioskApp.style.display = "block";
+      document.body.classList.add("authed");
+    }
 
-  // Admin editor input conversions
-  function isoToLocalInputValue(iso) {
-    if (!iso) return "";
-    const d = new Date(iso);
-    const pad = n => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
-  function localInputValueToIso(val) {
-    if (!val) return null;
-    // datetime-local is interpreted as local time by Date()
-    return new Date(val).toISOString();
-  }
-
-  /***********************
-   * STORAGE
-   ***********************/
-  function loadEntries() {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  }
-  function saveEntries(entries) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-  }
-
-  // Backfill: ensure id + workDate exist for old records
-  function backfillWorkDateAndId() {
-    const entries = loadEntries();
-    let changed = false;
-
-    for (const e of entries) {
-      if (!e.id) { e.id = crypto.randomUUID(); changed = true; }
-      if (!e.workDate) {
-        const base = e.clockIn ? new Date(e.clockIn) : new Date();
-        e.workDate = ymdLocal(base);
-        changed = true;
+    function tryEnter(){
+      if (loginPass.value === SITE_PASSCODE){
+        showKiosk();
+      } else {
+        loginErr.style.display = "block";
       }
     }
-    if (changed) saveEntries(entries);
-  }
 
-  /***********************
-   * KIOSK
-   ***********************/
-  function findActiveByName(name) {
-    const entries = loadEntries();
-    const n = name.toLowerCase();
-    return entries
-      .filter(e => (e.name || "").toLowerCase() === n && !e.clockOut)
-      .sort((a,b) => (b.clockIn || "").localeCompare(a.clockIn || ""))[0] || null;
-  }
-
-  function clockIn() {
-    const name = document.getElementById("name").value.trim();
-    const role = document.getElementById("role").value;
-    const notes = document.getElementById("notes").value.trim();
-    const status = document.getElementById("kioskStatus");
-
-    if (!name) {
-      status.innerHTML = `<span class="bad">Name is required.</span>`;
-      return;
-    }
-
-    const already = findActiveByName(name);
-    if (already) {
-      status.innerHTML = `<span class="bad">${escapeHtml(name)}</span> is already clocked in (since ${fmtLocal(already.clockIn)}).`;
-      return;
-    }
-
-    const entries = loadEntries();
-    entries.push({
-      id: crypto.randomUUID(),
-      name,
-      role,
-      notes,
-      workDate: ymdLocal(),     // ✅ ADDED: day they logged in
-      clockIn: nowIso(),
-      clockOut: null
+    loginBtn.addEventListener("click", tryEnter);
+    loginClear.addEventListener("click", () => {
+      loginPass.value = "";
+      loginErr.style.display = "none";
+      loginPass.focus();
     });
-    saveEntries(entries);
+    loginPass.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") tryEnter();
+    });
 
-    status.innerHTML = `<span class="ok">Clocked in:</span> ${escapeHtml(name)} (${escapeHtml(role)})`;
-    document.getElementById("notes").value = "";
-    renderActiveList();
-    renderReports();
-    if (isAdminUnlocked) renderAdminEditList();
-  }
+    // Sign out forces gate again (does NOT clear kiosk data)
+    btnSiteSignOut.addEventListener("click", showGate);
 
-  function clockOut() {
-    const name = document.getElementById("name").value.trim();
-    const status = document.getElementById("kioskStatus");
+    // Always require login on every visit:
+    showGate();
 
-    if (!name) {
-      status.innerHTML = `<span class="bad">Enter the name to clock out.</span>`;
-      return;
+    /** =========================
+     *  KIOSK SCRIPT (YOUR ORIGINAL)
+     *  ========================= */
+    const DEFAULT_PRODUCTIONS = ["Company", "TBA", "TBA", "TBA"];
+    const IN_KIND_RATE = 28; // $/hr
+
+    const KEY = "riseup_volunteer_kiosk_v1";
+    function loadState(){
+      const raw = localStorage.getItem(KEY);
+      if(!raw){
+        return {
+          adminPin: "1234",
+          productions: [...DEFAULT_PRODUCTIONS],
+          volunteers: [],
+          logs: []
+        };
+      }
+      try { return JSON.parse(raw); } catch { return null; }
+    }
+    function saveState(){
+      localStorage.setItem(KEY, JSON.stringify(state));
+    }
+    let state = loadState();
+    if(!state){
+      localStorage.removeItem(KEY);
+      state = loadState();
     }
 
-    const entries = loadEntries();
-    const n = name.toLowerCase();
-    const idx = entries
-      .map((e,i) => ({e,i}))
-      .filter(x => (x.e.name || "").toLowerCase() === n && !x.e.clockOut)
-      .sort((a,b) => (b.e.clockIn || "").localeCompare(a.e.clockIn || ""))[0]?.i;
+    const $ = (id)=>document.getElementById(id);
 
-    if (idx === undefined) {
-      status.innerHTML = `<span class="bad">No active shift found for</span> ${escapeHtml(name)}.`;
-      return;
+    function toast(msg){
+      const t = $("toast");
+      t.textContent = msg;
+      t.style.display = "block";
+      clearTimeout(toast._tm);
+      toast._tm = setTimeout(()=> t.style.display="none", 2000);
     }
 
-    entries[idx].clockOut = nowIso();
-    saveEntries(entries);
-
-    const hrs = round2(hoursBetween(entries[idx].clockIn, entries[idx].clockOut));
-    status.innerHTML = `<span class="ok">Clocked out:</span> ${escapeHtml(name)} • ${hrs} hrs`;
-    renderActiveList();
-    renderReports();
-    if (isAdminUnlocked) renderAdminEditList();
-  }
-
-  function renderActiveList() {
-    const wrap = document.getElementById("activeList");
-    const entries = loadEntries();
-    const active = entries
-      .filter(e => !e.clockOut)
-      .sort((a,b) => (b.clockIn || "").localeCompare(a.clockIn || ""));
-
-    if (!active.length) {
-      wrap.innerHTML = `<div class="listCard"><div class="muted">No one is currently clocked in.</div></div>`;
-      return;
+    function uid(){
+      return Math.random().toString(16).slice(2) + Date.now().toString(16);
     }
 
-    wrap.innerHTML = active.map(e => `
-      <div class="listCard">
-        <div class="listHeader">
-          <div><strong>${escapeHtml(e.name)}</strong> <span class="tiny">(${escapeHtml(e.role || "")})</span></div>
-          <div class="tiny">In: ${fmtLocal(e.clockIn)}</div>
-        </div>
-        <div class="tiny">Work Date: <span class="mono">${escapeHtml(e.workDate || "")}</span></div>
-      </div>
-    `).join("");
-  }
+    function norm(s){ return (s || "").trim(); }
 
-  /***********************
-   * REPORTS (includes Days Logged In)
-   ***********************/
-  function summarizeByVolunteer(entries) {
-    const map = new Map();
-
-    for (const e of entries) {
-      const name = (e.name || "").trim() || "Unknown";
-      if (!map.has(name)) map.set(name, { name, days: new Set(), hours: 0 });
-      const v = map.get(name);
-
-      if (e.workDate) v.days.add(e.workDate);               // ✅ ADDED: days logged in
-      if (e.clockIn && e.clockOut) v.hours += hoursBetween(e.clockIn, e.clockOut);
+    function titleCase(s){
+      s = norm(s);
+      if(!s) return s;
+      return s.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
     }
 
-    return [...map.values()]
-      .map(v => ({
-        name: v.name,
-        daysCount: v.days.size,
-        daysList: [...v.days].sort(),                       // ✅ ADDED: list of unique dates
-        totalHours: round2(v.hours)
-      }))
-      .sort((a,b) => a.name.localeCompare(b.name));
-  }
-
-  function renderReports() {
-    const filter = (document.getElementById("reportFilter")?.value || "").trim().toLowerCase();
-    const summaryTbody = document.getElementById("summaryTbody");
-    const rawTbody = document.getElementById("rawTbody");
-
-    const all = loadEntries();
-    const entries = filter ? all.filter(e => (e.name || "").toLowerCase().includes(filter)) : all;
-
-    const summary = summarizeByVolunteer(entries);
-
-    summaryTbody.innerHTML = summary.length ? summary.map(v => `
-      <tr>
-        <td><strong>${escapeHtml(v.name)}</strong></td>
-        <td>${v.daysCount}</td>
-        <td class="mono">${escapeHtml(v.daysList.join(", "))}</td>
-        <td>${v.totalHours}</td>
-      </tr>
-    `).join("") : `<tr><td colspan="4" class="muted">No data.</td></tr>`;
-
-    const raw = entries.slice().sort((a,b) => (b.clockIn || "").localeCompare(a.clockIn || ""));
-    rawTbody.innerHTML = raw.length ? raw.map(e => {
-      const hrs = e.clockIn && e.clockOut ? round2(hoursBetween(e.clockIn, e.clockOut)) : "";
-      return `
-        <tr>
-          <td class="mono">${escapeHtml(e.workDate || "")}</td>
-          <td>${escapeHtml(e.name || "")}</td>
-          <td>${escapeHtml(e.role || "")}</td>
-          <td>${fmtLocal(e.clockIn)}</td>
-          <td>${fmtLocal(e.clockOut)}</td>
-          <td>${hrs}</td>
-        </tr>
-      `;
-    }).join("") : `<tr><td colspan="6" class="muted">No data.</td></tr>`;
-  }
-
-  /***********************
-   * ADMIN: EDIT TIMES
-   ***********************/
-  let isAdminUnlocked = false;
-
-  function adminUpdateTimes(entryId, newClockInIso, newClockOutIso) {
-    const entries = loadEntries();
-    const idx = entries.findIndex(e => e.id === entryId);
-    if (idx === -1) return false;
-
-    entries[idx].clockIn = newClockInIso;
-    entries[idx].clockOut = newClockOutIso || null;
-
-    // ✅ keep workDate aligned with edited clockIn
-    entries[idx].workDate = ymdLocal(new Date(newClockInIso));
-
-    saveEntries(entries);
-    return true;
-  }
-
-  function renderAdminEditList() {
-    const wrap = document.getElementById("adminEditList");
-    const entries = loadEntries().slice().sort((a,b) => (b.clockIn || "").localeCompare(a.clockIn || ""));
-
-    if (!entries.length) {
-      wrap.innerHTML = `<div class="listCard"><div class="muted">No entries.</div></div>`;
-      return;
+    function roundUpTenth(hours){
+      return Math.ceil(hours * 10) / 10;
     }
 
-    wrap.innerHTML = entries.map(e => `
-      <div class="listCard">
-        <div class="listHeader">
+    function formatDateTime(ms){
+      const d = new Date(ms);
+      return d.toLocaleString([], { year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+    }
+
+    // ====== ADDED (for "days logged in" + admin edits) ======
+    function ymdLocalFromMs(ms){
+      const d = new Date(ms);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+    function msToLocalInputValue(ms){
+      if(!ms && ms !== 0) return "";
+      const d = new Date(ms);
+      const pad = n => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    function localInputValueToMs(val){
+      if(!val) return null;
+      const d = new Date(val); // interpreted as local time
+      const ms = d.getTime();
+      return Number.isFinite(ms) ? ms : null;
+    }
+    function recomputeLogDurations(log){
+      // Recompute minutes/hoursRoundedUp based on signIn/signOut
+      if(!log.signOut){
+        log.minutes = null;
+        log.hoursRoundedUp = null;
+        return;
+      }
+      const minutes = Math.max(0, Math.round((log.signOut - log.signIn) / 60000));
+      const hours = minutes / 60;
+      const rounded = roundUpTenth(hours);
+      log.minutes = minutes;
+      log.hoursRoundedUp = rounded;
+    }
+    function backfillWorkDates(){
+      // Ensure every log has workDate (day of signIn), without changing layout
+      let changed = false;
+      for(const l of state.logs){
+        if(!l.workDate && l.signIn){
+          l.workDate = ymdLocalFromMs(l.signIn);
+          changed = true;
+        }
+      }
+      if(changed) saveState();
+    }
+    backfillWorkDates();
+    // ====== /ADDED ======
+
+    function openModal(title, bodyHTML, actions){
+      $("modalTitle").textContent = title;
+      $("modalBody").innerHTML = bodyHTML;
+      const act = $("modalActions");
+      act.innerHTML = "";
+      (actions || []).forEach(btn => act.appendChild(btn));
+      $("modalBackdrop").style.display = "flex";
+    }
+
+    function closeModal(){
+      $("modalBackdrop").style.display = "none";
+      $("modalBody").innerHTML = "";
+      $("modalActions").innerHTML = "";
+    }
+
+    $("modalClose").onclick = closeModal;
+    $("modalBackdrop").addEventListener("click", (e)=>{
+      if(e.target === $("modalBackdrop")) closeModal();
+    });
+
+    function mkBtn(text, cls, onClick){
+      const b = document.createElement("button");
+      b.textContent = text;
+      b.className = cls || "ghost";
+      b.onclick = onClick;
+      return b;
+    }
+
+    function requirePin(okFn){
+      openModal("Admin PIN", `
+        <label>Enter PIN</label>
+        <input id="pinInput" type="password" inputmode="numeric" placeholder="PIN" />
+        <div class="hint" style="margin-top:8px;">Default PIN is 1234 (change it in Admin Settings).</div>
+      `, [
+        mkBtn("Cancel", "ghost", closeModal),
+        mkBtn("Continue", "primary", ()=>{
+          const pin = $("pinInput").value;
+          if(pin !== state.adminPin) { toast("Wrong PIN"); return; }
+          closeModal();
+          okFn();
+        })
+      ]);
+      setTimeout(()=> $("pinInput")?.focus(), 50);
+    }
+
+    function productionOptionsHTML(selected){
+      return state.productions.map(p => `<option value="${escapeHtml(p)}" ${p===selected?"selected":""}>${escapeHtml(p)}</option>`).join("");
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function addVolunteer(first, last){
+      first = titleCase(first);
+      last = titleCase(last);
+      const id = uid();
+      state.volunteers.push({ id, first, last, createdAt: Date.now() });
+      saveState();
+      return id;
+    }
+
+    function findVolunteer(id){ return state.volunteers.find(v => v.id === id); }
+
+    function isSignedIn(volunteerId){
+      return state.logs.some(l => l.volunteerId === volunteerId && !l.signOut);
+    }
+
+    function getOpenLog(volunteerId){
+      return state.logs.find(l => l.volunteerId === volunteerId && !l.signOut) || null;
+    }
+
+    function signIn(volunteerId, production){
+      if(isSignedIn(volunteerId)) return { ok:false, msg:"Already signed in." };
+      const now = Date.now();
+      const log = {
+        id: uid(),
+        volunteerId,
+        production,
+        signIn: now,
+        // ====== ADDED: day they logged in ======
+        workDate: ymdLocalFromMs(now),
+        // ====== /ADDED ======
+        signOut: null,
+        minutes: null,
+        hoursRoundedUp: null
+      };
+      state.logs.push(log);
+      saveState();
+      return { ok:true };
+    }
+
+    function signOut(volunteerId){
+      const log = getOpenLog(volunteerId);
+      if(!log) return { ok:false, msg:"No open sign-in found." };
+      const end = Date.now();
+      const minutes = Math.max(0, Math.round((end - log.signIn) / 60000));
+      const hours = minutes / 60;
+      const rounded = roundUpTenth(hours);
+
+      log.signOut = end;
+      log.minutes = minutes;
+      log.hoursRoundedUp = rounded;
+      // keep workDate aligned (in case older log missing)
+      if(!log.workDate) log.workDate = ymdLocalFromMs(log.signIn);
+      saveState();
+      return { ok:true, minutes, rounded };
+    }
+
+    function renderHome(){
+      const prodFilter = $("homeProductionFilter");
+      const selected = prodFilter.value || "ALL";
+      prodFilter.innerHTML = `<option value="ALL">All Productions</option>` + state.productions.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("");
+      prodFilter.value = (selected === "ALL" || state.productions.includes(selected)) ? selected : "ALL";
+
+      const qLast = norm($("homeLastSearch").value).toLowerCase();
+      const pSel = prodFilter.value;
+
+      const openLogs = state.logs.filter(l => !l.signOut);
+      const items = openLogs
+        .map(l => ({ log:l, v: findVolunteer(l.volunteerId) }))
+        .filter(x => x.v)
+        .filter(x => !qLast || x.v.last.toLowerCase().startsWith(qLast))
+        .filter(x => pSel === "ALL" || x.log.production === pSel)
+        .sort((a,b)=> (a.v.last+a.v.first).localeCompare(b.v.last+b.v.first));
+
+      const list = $("signedInList");
+      list.innerHTML = "";
+      $("signedInEmpty").style.display = items.length ? "none" : "block";
+
+      items.forEach(({log, v})=>{
+        const el = document.createElement("div");
+        el.className = "tile";
+        el.innerHTML = `
           <div>
-            <div><strong>${escapeHtml(e.name || "")}</strong> <span class="tiny">(${escapeHtml(e.role || "")})</span></div>
-            <div class="tiny">Work Date: <span class="mono">${escapeHtml(e.workDate || "")}</span></div>
+            <div class="name">${escapeHtml(v.first)} ${escapeHtml(v.last)}</div>
+            <div class="meta">${escapeHtml(log.production)} • Signed in: ${escapeHtml(formatDateTime(log.signIn))}</div>
           </div>
-          <div class="tiny mono">ID: ${escapeHtml(e.id || "")}</div>
+          <div class="right">
+            <span class="badge ok">SIGNED IN</span>
+            <button class="danger small">Sign Out</button>
+          </div>
+        `;
+        el.querySelector("button").onclick = ()=> confirmSignOut(v.id, v, log);
+        list.appendChild(el);
+      });
+
+      $("statVolunteers").textContent = state.volunteers.length;
+      $("statSignedIn").textContent = openLogs.length;
+
+      const totalHours = state.logs
+        .filter(l=> l.signOut && typeof l.hoursRoundedUp === "number")
+        .reduce((sum,l)=> sum + l.hoursRoundedUp, 0);
+
+      $("statHours").textContent = totalHours.toFixed(1);
+      $("statValue").textContent = Math.round(totalHours * IN_KIND_RATE).toLocaleString();
+    }
+
+    function confirmAddVolunteer(){
+      openModal("Add Volunteer", `
+        <div class="twoCol">
+          <div>
+            <label>First Name</label>
+            <input id="addFirst" placeholder="First name" />
+          </div>
+          <div>
+            <label>Last Name</label>
+            <input id="addLast" placeholder="Last name" />
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="hint">After you type your name, you’ll confirm the spelling.</div>
+        </div>
+      `, [
+        mkBtn("Cancel", "ghost", closeModal),
+        mkBtn("Continue", "primary", ()=>{
+          const first = norm($("addFirst").value);
+          const last  = norm($("addLast").value);
+          if(!first || !last){ toast("Please enter first and last name."); return; }
+
+          const firstT = titleCase(first);
+          const lastT  = titleCase(last);
+
+          openModal("Confirm Spelling", `
+            <div class="hint">Is this correct?</div>
+            <div style="margin-top:10px; font-size:26px; font-weight:900;">${escapeHtml(firstT)} ${escapeHtml(lastT)}</div>
+          `, [
+            mkBtn("Edit", "ghost", confirmAddVolunteer),
+            mkBtn("Yes, Save", "primary", ()=>{
+              addVolunteer(firstT, lastT);
+              closeModal();
+              toast("Added!");
+              renderHome();
+            })
+          ]);
+        })
+      ]);
+      setTimeout(()=> $("addFirst")?.focus(), 50);
+    }
+
+    function openClockScreen(){
+      openModal("Sign In / Sign Out", `
+        <div class="twoCol">
+          <div>
+            <label>Production</label>
+            <select id="clockProd">${productionOptionsHTML(state.productions[0])}</select>
+          </div>
+          <div>
+            <label>Search by Last Name</label>
+            <input id="clockSearch" placeholder="Type last name..." />
+          </div>
         </div>
 
-        <div class="row" style="margin-top:10px;">
-          <div style="min-width:240px;">
-            <label>Clock In</label>
-            <input type="datetime-local" data-id="${escapeHtml(e.id)}" data-field="in" value="${isoToLocalInputValue(e.clockIn)}">
+        <div class="divider"></div>
+
+        <div class="hint">Tap your name, then choose Sign In or Sign Out (you’ll confirm).</div>
+        <div class="list" id="clockList" style="margin-top:10px;"></div>
+        <div class="hint" id="clockEmpty" style="display:none; margin-top:10px;">No matches.</div>
+      `, [
+        mkBtn("Done", "primary", ()=>{ closeModal(); renderHome(); })
+      ]);
+
+      function renderClockList(){
+        const q = norm($("clockSearch").value).toLowerCase();
+        const prod = $("clockProd").value;
+
+        const people = state.volunteers
+          .filter(v => !q || v.last.toLowerCase().startsWith(q))
+          .sort((a,b)=> (a.last+a.first).localeCompare(b.last+b.first));
+
+        const list = $("clockList");
+        list.innerHTML = "";
+        $("clockEmpty").style.display = people.length ? "none" : "block";
+
+        people.forEach(v=>{
+          const signed = isSignedIn(v.id);
+          const open = getOpenLog(v.id);
+
+          const el = document.createElement("div");
+          el.className = "tile";
+          el.innerHTML = `
+            <div>
+              <div class="name">${escapeHtml(v.first)} ${escapeHtml(v.last)}</div>
+              <div class="meta">${signed ? (escapeHtml(open.production) + " • Signed in: " + escapeHtml(formatDateTime(open.signIn))) : "Not signed in"}</div>
+            </div>
+            <div class="right">
+              ${signed ? `<span class="badge ok">SIGNED IN</span><button class="danger small">Sign Out</button>`
+                       : `<span class="badge">READY</span><button class="ok small">Sign In</button>`}
+            </div>
+          `;
+          const btn = el.querySelector("button");
+          if(signed){
+            btn.onclick = ()=> confirmSignOut(v.id, v, open);
+          }else{
+            btn.onclick = ()=> confirmSignIn(v.id, v, prod);
+          }
+          list.appendChild(el);
+        });
+      }
+
+      $("clockSearch").addEventListener("input", renderClockList);
+      $("clockProd").addEventListener("change", renderClockList);
+      renderClockList();
+      setTimeout(()=> $("clockSearch")?.focus(), 50);
+    }
+
+    function confirmSignIn(volunteerId, v, production){
+      openModal("Confirm Sign In", `
+        <div style="font-size:22px; font-weight:900;">${escapeHtml(v.first)} ${escapeHtml(v.last)}</div>
+        <div class="hint" style="margin-top:6px;">Production: <b>${escapeHtml(production)}</b></div>
+      `, [
+        mkBtn("Cancel", "ghost", closeModal),
+        mkBtn("Confirm Sign In", "primary", ()=>{
+          const res = signIn(volunteerId, production);
+          if(!res.ok){ toast(res.msg); return; }
+          closeModal();
+          toast("Signed in!");
+          renderHome();
+        })
+      ]);
+    }
+
+    function confirmSignOut(volunteerId, v, openLog){
+      const prod = openLog?.production || "";
+      openModal("Confirm Sign Out", `
+        <div style="font-size:22px; font-weight:900;">${escapeHtml(v.first)} ${escapeHtml(v.last)}</div>
+        <div class="hint" style="margin-top:6px;">Production: <b>${escapeHtml(prod)}</b></div>
+        <div class="hint" style="margin-top:6px;">Signed in: ${escapeHtml(formatDateTime(openLog.signIn))}</div>
+      `, [
+        mkBtn("Cancel", "ghost", closeModal),
+        mkBtn("Confirm Sign Out", "danger", ()=>{
+          const res = signOut(volunteerId);
+          if(!res.ok){ toast(res.msg); return; }
+          closeModal();
+          toast(`Signed out • ${res.rounded.toFixed(1)} hrs`);
+          renderHome();
+        })
+      ]);
+    }
+
+    function openReports(){
+      openModal("Reports (Print to PDF)", `
+        <div class="twoCol">
+          <div>
+            <label>Production</label>
+            <select id="repProd">
+              <option value="ALL">All Productions</option>
+              ${state.productions.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("")}
+            </select>
           </div>
-          <div style="min-width:240px;">
-            <label>Clock Out</label>
-            <input type="datetime-local" data-id="${escapeHtml(e.id)}" data-field="out" value="${isoToLocalInputValue(e.clockOut)}">
+          <div>
+            <label>Search Last Name</label>
+            <input id="repLast" placeholder="Optional..." />
           </div>
         </div>
 
-        <button class="btn secondary" data-save="${escapeHtml(e.id)}" style="margin-top:10px;">Save</button>
-      </div>
-    `).join("");
+        <div class="divider"></div>
 
-    wrap.querySelectorAll('button[data-save]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-save');
-        const inEl  = wrap.querySelector(`input[data-id="${CSS.escape(id)}"][data-field="in"]`);
-        const outEl = wrap.querySelector(`input[data-id="${CSS.escape(id)}"][data-field="out"]`);
+        <div class="hint">
+          This report uses <b>rounded hours</b> (up to the next 0.1 hr). In-kind value is <b>$${IN_KIND_RATE}/hr</b>.
+          Tap <b>Generate PDF</b>, then choose <b>Print</b> → <b>Save as PDF</b> (or Share → Print on iPad).
+        </div>
 
-        const newInIso = localInputValueToIso(inEl.value);
-        const newOutIso = outEl.value ? localInputValueToIso(outEl.value) : null;
+        <div class="divider"></div>
 
-        if (!newInIso) return alert("Clock In is required.");
-        if (newOutIso && new Date(newOutIso) < new Date(newInIso)) {
-          return alert("Clock Out can't be before Clock In.");
+        <div class="list" id="repPreview"></div>
+      `, [
+        mkBtn("Close", "ghost", closeModal),
+        mkBtn("Generate PDF", "primary", ()=> generatePrintableReport())
+      ]);
+
+      function computeTotals(prodSel, lastQuery){
+        const totals = new Map();
+
+        // ====== ADDED: track days logged in per volunteer (unique workDate) ======
+        function ensureRow(v){
+          if(!totals.has(v.id)){
+            totals.set(v.id, { v, hoursByProd: new Map(), totalHours: 0, days: new Set() });
+          }
+          return totals.get(v.id);
         }
 
-        adminUpdateTimes(id, newInIso, newOutIso);
+        // For DAYS: include ANY log that matches filter (open or closed)
+        const allRelevantForDays = state.logs
+          .filter(l => l.signIn)
+          .filter(l => prodSel === "ALL" || l.production === prodSel);
 
-        // refresh everything
-        renderAdminEditList();
-        renderActiveList();
-        renderReports();
-        alert("Saved.");
-      });
-    });
-  }
+        allRelevantForDays.forEach(l=>{
+          const v = findVolunteer(l.volunteerId);
+          if(!v) return;
+          if(lastQuery && !v.last.toLowerCase().startsWith(lastQuery)) return;
+          const row = ensureRow(v);
+          const d = l.workDate || ymdLocalFromMs(l.signIn);
+          row.days.add(d);
+        });
+        // ====== /ADDED ======
 
-  /***********************
-   * EXPORT / CLEAR
-   ***********************/
-  function exportCsv() {
-    const entries = loadEntries();
-    const headers = ["id","name","role","workDate","clockIn","clockOut","notes"];
-    const rows = entries.map(e => headers.map(h => {
-      const v = e[h] ?? "";
-      const s = String(v).replaceAll('"', '""');
-      return `"${s}"`;
-    }).join(","));
-    const csv = [headers.join(","), ...rows].join("\n");
+        // For HOURS: completed sessions only (your original behavior)
+        const logs = state.logs.filter(l => l.signOut && typeof l.hoursRoundedUp === "number")
+          .filter(l => prodSel === "ALL" || l.production === prodSel);
 
-    const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `riseup_volunteers_${ymdLocal()}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
+        logs.forEach(l=>{
+          const v = findVolunteer(l.volunteerId);
+          if(!v) return;
+          if(lastQuery && !v.last.toLowerCase().startsWith(lastQuery)) return;
 
-  function clearAllData() {
-    const ok = confirm("This will permanently delete ALL kiosk data from this browser. Continue?");
-    if (!ok) return;
-    localStorage.removeItem(STORAGE_KEY);
-    backfillWorkDateAndId();
-    renderActiveList();
-    renderReports();
-    if (isAdminUnlocked) renderAdminEditList();
-    alert("Cleared.");
-  }
+          const row = ensureRow(v);
+          row.totalHours += l.hoursRoundedUp;
+          row.hoursByProd.set(l.production, (row.hoursByProd.get(l.production) || 0) + l.hoursRoundedUp);
+        });
 
-  /***********************
-   * TABS
-   ***********************/
-  function setTab(tab) {
-    document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
-    document.getElementById("panel-kiosk").classList.toggle("active", tab === "kiosk");
-    document.getElementById("panel-reports").classList.toggle("active", tab === "reports");
-    document.getElementById("panel-admin").classList.toggle("active", tab === "admin");
+        return Array.from(totals.values()).sort((a,b)=> (a.v.last+a.v.first).localeCompare(b.v.last+b.v.first));
+      }
 
-    if (tab === "reports") renderReports();
-    if (tab === "admin" && isAdminUnlocked) renderAdminEditList();
-  }
+      function renderPreview(){
+        const prodSel = $("repProd").value;
+        const lastQuery = norm($("repLast").value).toLowerCase();
+        const rows = computeTotals(prodSel, lastQuery);
 
-  /***********************
-   * INIT + EVENTS
-   ***********************/
-  document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
-  document.getElementById("clockInBtn").addEventListener("click", clockIn);
-  document.getElementById("clockOutBtn").addEventListener("click", clockOut);
+        const prev = $("repPreview");
+        prev.innerHTML = "";
+        if(rows.length === 0){
+          prev.innerHTML = `<div class="hint">No completed sessions found for this filter yet.</div>`;
+          return;
+        }
 
-  document.getElementById("reportFilter").addEventListener("input", renderReports);
-  document.getElementById("exportCsvBtn").addEventListener("click", exportCsv);
-  document.getElementById("clearAllBtn").addEventListener("click", clearAllData);
+        rows.slice(0, 12).forEach(r=>{
+          const value = r.totalHours * IN_KIND_RATE;
+          const el = document.createElement("div");
+          el.className = "tile";
+          el.innerHTML = `
+            <div>
+              <div class="name">${escapeHtml(r.v.first)} ${escapeHtml(r.v.last)}</div>
+              <div class="meta">
+                ${prodSel === "ALL" ? "All productions" : escapeHtml(prodSel)}
+                • ${r.totalHours.toFixed(1)} hrs • $${value.toFixed(0)}
+                <!-- ADDED: days count preview -->
+                • ${r.days.size} day${r.days.size===1?"":"s"}
+              </div>
+            </div>
+            <div class="right"><span class="badge">$${value.toFixed(0)}</span></div>
+          `;
+          prev.appendChild(el);
+        });
 
-  document.getElementById("adminLoginBtn").addEventListener("click", () => {
-    const pass = document.getElementById("adminPass").value;
-    const status = document.getElementById("adminStatus");
-    if (pass === ADMIN_PASSWORD) {
-      isAdminUnlocked = true;
-      status.innerHTML = `<span class="ok">Unlocked.</span>`;
-      document.getElementById("adminTools").style.display = "block";
-      renderAdminEditList();
-    } else {
-      status.innerHTML = `<span class="bad">Wrong password.</span>`;
+        if(rows.length > 12){
+          const more = document.createElement("div");
+          more.className = "hint";
+          more.style.marginTop = "8px";
+          more.textContent = `Previewing 12 of ${rows.length} volunteers. PDF includes all.`;
+          prev.appendChild(more);
+        }
+      }
+
+      $("repProd").addEventListener("change", renderPreview);
+      $("repLast").addEventListener("input", renderPreview);
+      renderPreview();
+
+      openReports._computeTotals = computeTotals;
     }
-  });
 
-  // start
-  document.getElementById("todayPill").textContent = ymdLocal();
-  backfillWorkDateAndId();
-  renderActiveList();
-  renderReports();
-</script>
+    function generatePrintableReport(){
+      const prodSel = $("repProd").value;
+      const lastQuery = norm($("repLast").value).toLowerCase();
+      const rows = openReports._computeTotals(prodSel, lastQuery);
+
+      const now = new Date();
+      const title = prodSel === "ALL" ? "All Productions" : prodSel;
+
+      const styles = `
+        <style>
+          body{ font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 28px; color:#111; }
+          h1{ margin: 0 0 6px; letter-spacing:.04em; text-transform: uppercase; }
+          .sub{ color:#444; margin-bottom: 16px; }
+          .meta{ color:#444; font-size: 12px; margin-bottom: 16px; }
+          table{ width:100%; border-collapse: collapse; margin-top: 10px; }
+          th, td{ border:1px solid #ccc; padding: 8px; font-size: 12px; }
+          th{ background:#f3f3f3; text-align:left; }
+          .right{ text-align:right; }
+          .totals{ margin-top: 14px; font-size: 13px; }
+          .totals b{ font-size: 14px; }
+          .days{ color:#444; font-size: 11px; margin-top: 4px; line-height: 1.25; }
+          @media print{ body{ margin: 14mm; } }
+        </style>
+      `;
+
+      let prodCols = [];
+      if(prodSel === "ALL"){ prodCols = [...state.productions]; }
+      else { prodCols = [prodSel]; }
+
+      let grandHours = 0;
+
+      // ====== ADDED: Days column ======
+      const headerCols = `
+        <th>Volunteer</th>
+        <th class="right">Days</th>
+        ${prodCols.map(p=>`<th class="right">${escapeHtml(p)} (hrs)</th>`).join("")}
+        <th class="right">Total (hrs)</th>
+        <th class="right">In-Kind ($)</th>
+      `;
+      // ====== /ADDED ======
+
+      const bodyRows = rows.map(r=>{
+        const per = prodCols.map(p => (r.hoursByProd.get(p) || 0));
+        const total = r.totalHours;
+        const value = total * IN_KIND_RATE;
+        grandHours += total;
+
+        // ====== ADDED: show list of unique dates under volunteer name (keeps layout compact) ======
+        const datesList = Array.from(r.days || []).sort();
+        const datesHtml = datesList.length ? `<div class="days">Dates: ${escapeHtml(datesList.join(", "))}</div>` : `<div class="days">Dates: —</div>`;
+        // ====== /ADDED ======
+
+        return `
+          <tr>
+            <td>
+              ${escapeHtml(r.v.last)}, ${escapeHtml(r.v.first)}
+              ${datesHtml}
+            </td>
+            <td class="right"><b>${(r.days ? r.days.size : 0)}</b></td>
+            ${per.map(h=>`<td class="right">${h.toFixed(1)}</td>`).join("")}
+            <td class="right"><b>${total.toFixed(1)}</b></td>
+            <td class="right">$${value.toFixed(0)}</td>
+          </tr>
+        `;
+      }).join("");
+
+      const grandValue = grandHours * IN_KIND_RATE;
+
+      const html = `
+        <!doctype html>
+        <html><head><meta charset="utf-8" />${styles}</head>
+        <body>
+          <h1>RiseUp Theatre Company</h1>
+          <div class="sub">Volunteer Hours Report — <b>${escapeHtml(title)}</b></div>
+          <div class="meta">
+            Generated: ${now.toLocaleString()}<br/>
+            Rounding: up to next 0.1 hr • In-Kind Rate: $${IN_KIND_RATE}/hr
+          </div>
+
+          <table>
+            <thead><tr>${headerCols}</tr></thead>
+            <tbody>${bodyRows || `<tr><td colspan="${prodCols.length+4}">No data.</td></tr>`}</tbody>
+          </table>
+
+          <div class="totals">
+            <b>Grand Total:</b> ${grandHours.toFixed(1)} hours • <b>In-Kind Value:</b> $${grandValue.toFixed(0)}
+          </div>
+        </body></html>
+      `;
+
+      const w = window.open("", "_blank");
+      if(!w){ toast("Pop-up blocked. Allow pop-ups, then try again."); return; }
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+      w.focus();
+      setTimeout(()=> w.print(), 400);
+    }
+
+    function openBackupRestore(){
+      openModal("Backup / Restore", `
+        <div class="hint">
+          Backup downloads a file you can save to iCloud/Drive. Restore loads that file back into this kiosk.
+        </div>
+        <div class="divider"></div>
+
+        <div class="btnRow">
+          <button class="primary" id="dlBackup">Download Backup</button>
+          <button class="ghost" id="upRestore">Restore from File</button>
+        </div>
+
+        <input type="file" id="restoreFile" accept="application/json" style="display:none;" />
+      `, [
+        mkBtn("Done", "primary", ()=>{ closeModal(); renderHome(); })
+      ]);
+
+      $("dlBackup").onclick = ()=>{
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type:"application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `RiseUpVolunteerBackup_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        toast("Backup downloaded");
+      };
+
+      $("upRestore").onclick = ()=> $("restoreFile").click();
+
+      $("restoreFile").onchange = async (e)=>{
+        const file = e.target.files?.[0];
+        if(!file) return;
+        const text = await file.text();
+        try{
+          const obj = JSON.parse(text);
+          if(!obj || !Array.isArray(obj.volunteers) || !Array.isArray(obj.logs) || !Array.isArray(obj.productions)){
+            toast("That file doesn't look like a RiseUp backup.");
+            return;
+          }
+          state = obj;
+
+          // ensure workDate exists on restored logs
+          backfillWorkDates();
+
+          saveState();
+          toast("Restored!");
+          closeModal();
+          renderHome();
+        }catch{
+          toast("Could not read that file.");
+        }
+      };
+    }
+
+    // ====== ADDED: Admin time editor (edit sign-in/out times) ======
+    function openEditTimes(){
+      // requires PIN already (we call it from openAdminSettings after PIN)
+      openModal("Edit Times (Admin)", `
+        <div class="twoCol">
+          <div>
+            <label>Production</label>
+            <select id="editProd">
+              <option value="ALL">All Productions</option>
+              ${state.productions.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("")}
+            </select>
+          </div>
+          <div>
+            <label>Search Last Name</label>
+            <input id="editLast" placeholder="Optional..." />
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="hint">
+          Edit times below. If you clear <b>Sign Out</b>, the session becomes “open” again (no hours counted until signed out).
+          Hours will be recalculated and rounded up to the next 0.1 hr.
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="list" id="editList"></div>
+        <div class="hint" id="editEmpty" style="display:none; margin-top:10px;">No matches.</div>
+      `, [
+        mkBtn("Close", "primary", ()=>{ closeModal(); renderHome(); })
+      ]);
+
+      function renderEditList(){
+        const prodSel = $("editProd").value;
+        const lastQuery = norm($("editLast").value).toLowerCase();
+
+        const rows = state.logs
+          .slice()
+          .sort((a,b)=> (b.signIn || 0) - (a.signIn || 0))
+          .map(l => ({ l, v: findVolunteer(l.volunteerId) }))
+          .filter(x => x.v)
+          .filter(x => prodSel === "ALL" || x.l.production === prodSel)
+          .filter(x => !lastQuery || x.v.last.toLowerCase().startsWith(lastQuery));
+
+        const list = $("editList");
+        list.innerHTML = "";
+        $("editEmpty").style.display = rows.length ? "none" : "block";
+
+        rows.forEach(({l, v})=>{
+          // ensure workDate is present
+          if(!l.workDate && l.signIn) l.workDate = ymdLocalFromMs(l.signIn);
+
+          const isOpen = !l.signOut;
+          const hours = (l.signOut && typeof l.hoursRoundedUp === "number") ? l.hoursRoundedUp : null;
+
+          const el = document.createElement("div");
+          el.className = "tile";
+          el.innerHTML = `
+            <div style="min-width:0;">
+              <div class="name">${escapeHtml(v.first)} ${escapeHtml(v.last)}</div>
+              <div class="meta">
+                ${escapeHtml(l.production)} • Work Date: ${escapeHtml(l.workDate || "—")}
+                • ${isOpen ? "OPEN" : (hours !== null ? (hours.toFixed(1) + " hrs") : "—")}
+              </div>
+
+              <div class="divider" style="margin:10px 0;"></div>
+
+              <div class="twoCol">
+                <div>
+                  <label>Sign In</label>
+                  <input type="datetime-local" data-log="${escapeHtml(l.id)}" data-field="in" value="${msToLocalInputValue(l.signIn)}" />
+                </div>
+                <div>
+                  <label>Sign Out</label>
+                  <input type="datetime-local" data-log="${escapeHtml(l.id)}" data-field="out" value="${l.signOut ? msToLocalInputValue(l.signOut) : ""}" />
+                </div>
+              </div>
+            </div>
+            <div class="right">
+              <span class="badge ${isOpen ? "danger" : "ok"}">${isOpen ? "OPEN" : "CLOSED"}</span>
+              <button class="primary small" data-save="${escapeHtml(l.id)}">Save</button>
+            </div>
+          `;
+
+          el.querySelector('button[data-save]').onclick = ()=>{
+            const id = l.id;
+            const inEl  = el.querySelector(`input[data-log="${CSS.escape(id)}"][data-field="in"]`);
+            const outEl = el.querySelector(`input[data-log="${CSS.escape(id)}"][data-field="out"]`);
+
+            const newIn = localInputValueToMs(inEl.value);
+            const newOut = outEl.value ? localInputValueToMs(outEl.value) : null;
+
+            if(newIn === null){
+              toast("Sign In is required.");
+              return;
+            }
+            if(newOut !== null && newOut < newIn){
+              toast("Sign Out can't be before Sign In.");
+              return;
+            }
+
+            const log = state.logs.find(x => x.id === id);
+            if(!log){ toast("Could not find that log."); return; }
+
+            log.signIn = newIn;
+            log.signOut = newOut;
+            log.workDate = ymdLocalFromMs(newIn);
+            recomputeLogDurations(log);
+
+            saveState();
+            toast("Saved");
+            renderEditList();
+            renderHome();
+          };
+
+          list.appendChild(el);
+        });
+
+        // persist any new workDate backfill caused by viewing
+        saveState();
+      }
+
+      $("editProd").addEventListener("change", renderEditList);
+      $("editLast").addEventListener("input", renderEditList);
+      renderEditList();
+      setTimeout(()=> $("editLast")?.focus(), 50);
+    }
+    // ====== /ADDED ======
+
+    function openAdminSettings(){
+      requirePin(()=>{
+        openModal("Admin Settings", `
+          <div class="twoCol">
+            <div>
+              <label>Change Admin PIN</label>
+              <input id="newPin" type="password" inputmode="numeric" placeholder="New PIN" />
+            </div>
+            <div>
+              <label>Confirm PIN</label>
+              <input id="newPin2" type="password" inputmode="numeric" placeholder="Confirm PIN" />
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <label>Productions (comma separated)</label>
+          <input id="prodList" placeholder="Company, TBA, ..." />
+
+          <div class="hint" style="margin-top:10px;">
+            Tip: Keep production names short so they look great on the kiosk.
+          </div>
+
+          <!-- ====== ADDED: admin edit times button (no layout changes outside modal) ====== -->
+          <div class="divider"></div>
+          <div class="hint">Admin Tools:</div>
+          <div class="btnRow" style="margin-top:10px;">
+            <button class="ghost" id="btnEditTimes">Edit Times</button>
+            <button class="ghost" id="btnBackfillDays">Backfill Days</button>
+          </div>
+          <div class="hint" style="margin-top:8px;">
+            “Edit Times” lets you adjust sign-in/sign-out times. “Backfill Days” adds missing Work Date to older logs.
+          </div>
+          <!-- ====== /ADDED ====== -->
+        `, [
+          mkBtn("Cancel", "ghost", closeModal),
+          mkBtn("Save", "primary", ()=>{
+            const p1 = $("newPin").value.trim();
+            const p2 = $("newPin2").value.trim();
+            if((p1 || p2) && (p1 !== p2)){ toast("PINs do not match."); return; }
+            if(p1 && p1.length < 4){ toast("PIN should be at least 4 digits."); return; }
+
+            const prods = $("prodList").value
+              .split(",")
+              .map(s=>titleCase(s))
+              .map(s=>s.trim())
+              .filter(Boolean);
+
+            if(prods.length === 0){ toast("Please enter at least one production."); return; }
+
+            if(p1) state.adminPin = p1;
+            state.productions = prods;
+
+            saveState();
+            closeModal();
+            toast("Saved!");
+            renderHome();
+          })
+        ]);
+
+        $("prodList").value = state.productions.join(", ");
+
+        // ====== ADDED: wire modal buttons ======
+        $("btnEditTimes").onclick = ()=> openEditTimes();
+        $("btnBackfillDays").onclick = ()=>{
+          backfillWorkDates();
+          toast("Backfill complete");
+          renderHome();
+        };
+        // ====== /ADDED ======
+      });
+    }
+
+    function resetAllData(){
+      requirePin(()=>{
+        openModal("Reset Everything?", `
+          <div class="hint" style="color:#fff;">
+            This will permanently delete <b>all volunteers</b> and <b>all logs</b> on this kiosk.
+            Do this only if you’re starting completely over.
+          </div>
+        `, [
+          mkBtn("Cancel", "ghost", closeModal),
+          mkBtn("Yes, Reset", "danger", ()=>{
+            localStorage.removeItem(KEY);
+            state = loadState();
+            closeModal();
+            toast("Reset complete");
+            renderHome();
+          })
+        ]);
+      });
+    }
+
+    $("btnAdd").onclick = confirmAddVolunteer;
+    $("btnClock").onclick = openClockScreen;
+    $("btnReports").onclick = openReports;
+    $("btnBackup").onclick = openBackupRestore;
+    $("btnAdminSettings").onclick = openAdminSettings;
+    $("btnResetAll").onclick = resetAllData;
+
+    $("homeProductionFilter").addEventListener("change", renderHome);
+    $("homeLastSearch").addEventListener("input", renderHome);
+
+    // Initial render (kiosk data stays intact even though gate blocks view)
+    renderHome();
+  </script>
 </body>
 </html>
