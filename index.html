@@ -1109,6 +1109,146 @@ $("homeLastSearch").addEventListener("input", renderHome);
  *  INITIAL RENDER
  *  ========================= */
 renderHome();
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Protected Site</title>
+
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 0; background: #0b0f19; color: #e8eefc; }
+    .wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+    .card { width: 100%; max-width: 520px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px; padding: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    p { margin: 0 0 16px; opacity: 0.85; line-height: 1.4; }
+    label { display: block; margin: 14px 0 6px; font-weight: 600; font-size: 14px; }
+    input { width: 100%; padding: 12px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(0,0,0,0.25); color: #e8eefc; outline: none; }
+    input:focus { border-color: rgba(180, 210, 255, 0.65); }
+    .row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    button { cursor: pointer; border: 0; border-radius: 12px; padding: 11px 14px; font-weight: 700; }
+    .primary { background: #4c7dff; color: white; }
+    .ghost { background: rgba(255,255,255,0.10); color: #e8eefc; }
+    .error { margin-top: 10px; color: #ffb4b4; display: none; }
+    .hint { margin-top: 14px; font-size: 13px; opacity: 0.75; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .badge { font-size: 12px; opacity: 0.75; padding: 6px 10px; border: 1px solid rgba(255,255,255,0.16); border-radius: 999px; }
+    .content { display: none; }
+    .login { display: none; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <!-- LOGIN VIEW -->
+    <div class="card login" id="loginView">
+      <div class="topbar">
+        <h1>Sign in</h1>
+        <div class="badge">Passcode required</div>
+      </div>
+
+      <p>This site is for invited visitors only. Enter the passcode to continue.</p>
+
+      <label for="passcode">Passcode</label>
+      <input id="passcode" type="password" placeholder="Enter passcode" autocomplete="off" />
+
+      <div class="row">
+        <button class="primary" id="signInBtn">Sign In</button>
+        <button class="ghost" id="clearBtn" type="button">Clear</button>
+      </div>
+
+      <div class="error" id="errorMsg">Incorrect passcode.</div>
+
+      <div class="hint">
+        Note: this is “light” protection (good for keeping out casual visitors).
+      </div>
+    </div>
+
+    <!-- CONTENT VIEW -->
+    <div class="card content" id="contentView">
+      <div class="topbar">
+        <h1>Welcome</h1>
+        <button class="ghost" id="signOutBtn">Sign Out</button>
+      </div>
+
+      <!-- ✅ PUT YOUR REAL WEBSITE CONTENT BELOW THIS LINE -->
+      <p>You’re signed in. Replace this text with your site content.</p>
+      <p>Example: show info, ticket links, rehearsal schedule, private preview video, etc.</p>
+      <!-- ✅ PUT YOUR REAL WEBSITE CONTENT ABOVE THIS LINE -->
+    </div>
+  </div>
+
+  <script>
+    // ====== CONFIG ======
+    // Change this passcode to whatever you want:
+    const PASSCODE = "RiseUp2026"; // <-- CHANGE ME
+    const STORAGE_KEY = "site_auth_v1";
+
+    // ====== HELPERS ======
+    const loginView = document.getElementById("loginView");
+    const contentView = document.getElementById("contentView");
+    const passInput = document.getElementById("passcode");
+    const errorMsg = document.getElementById("errorMsg");
+
+    function showLogin() {
+      loginView.style.display = "block";
+      contentView.style.display = "none";
+      errorMsg.style.display = "none";
+      passInput.value = "";
+      passInput.focus();
+    }
+
+    function showContent() {
+      loginView.style.display = "none";
+      contentView.style.display = "block";
+    }
+
+    function isAuthed() {
+      return localStorage.getItem(STORAGE_KEY) === "true";
+    }
+
+    function setAuthed(value) {
+      localStorage.setItem(STORAGE_KEY, value ? "true" : "false");
+    }
+
+    // ====== ACTIONS ======
+    function signIn() {
+      const entered = passInput.value;
+      if (entered === PASSCODE) {
+        setAuthed(true);
+        showContent();
+      } else {
+        errorMsg.style.display = "block";
+      }
+    }
+
+    function signOut() {
+      localStorage.removeItem(STORAGE_KEY);
+      showLogin();
+    }
+
+    // ====== EVENTS ======
+    document.getElementById("signInBtn").addEventListener("click", signIn);
+    document.getElementById("signOutBtn").addEventListener("click", signOut);
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      passInput.value = "";
+      passInput.focus();
+      errorMsg.style.display = "none";
+    });
+
+    // Enter key submits
+    passInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") signIn();
+    });
+
+    // ====== INIT ======
+    if (isAuthed()) showContent();
+    else showLogin();
+  </script>
+</body>
+</html>
 </script>
 </body>
 </html>
