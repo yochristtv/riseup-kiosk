@@ -125,7 +125,6 @@
 
   <script>
     const PASSCODE = "RiseUp2026";
-    const STORAGE_KEY = "riseup_auth";
 
     const loginView = document.getElementById("loginView");
     const contentView = document.getElementById("contentView");
@@ -147,7 +146,6 @@
 
     function signIn() {
       if (passInput.value === PASSCODE) {
-        localStorage.setItem(STORAGE_KEY, "true");
         showContent();
       } else {
         errorMsg.style.display = "block";
@@ -155,7 +153,6 @@
     }
 
     function signOut() {
-      localStorage.removeItem(STORAGE_KEY);
       showLogin();
     }
 
@@ -168,11 +165,8 @@
       }
     });
 
-    if (localStorage.getItem(STORAGE_KEY) === "true") {
-      showContent();
-    } else {
-      showLogin();
-    }
+    // Always require login on page load
+    showLogin();
   </script>
 
 </body>
