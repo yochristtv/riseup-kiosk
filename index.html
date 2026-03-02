@@ -667,27 +667,81 @@
     const DEFAULT_PRODUCTIONS = ["Company", "TBA", "TBA", "TBA"];
     const IN_KIND_RATE = 28; // $/hr
 
-    const KEY = "riseup_volunteer_kiosk_v1";
-    function loadState(){
-      const raw = localStorage.getItem(KEY);
-      if(!raw){
-        return {
-          adminPin: "1234",
-          productions: [...DEFAULT_PRODUCTIONS],
-          volunteers: [],
-          logs: []
-        };
-      }
-      try { return JSON.parse(raw); } catch { return null; }
-    }
-    function saveState(){
-      localStorage.setItem(KEY, JSON.stringify(state));
-    }
-    let state = loadState();
-    if(!state){
-      localStorage.removeItem(KEY);
-      state = loadState();
-    }
+   const DEFAULT_PRODUCTIONS = ["Company", "TBA", "TBA", "TBA"];
+const IN_KIND_RATE = 28; // $/hr
+
+const KEY = "riseup_volunteer_kiosk_v1";
+
+// ✅ Your Google Apps Script Web App URL
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbye1i6xYnlVN1eGGCFzVn2iRv9sAPunJoDKXbH2tyxUJd2A5A3lxWBnhRPAlP6SpvM_ZA/exec";
+
+function defaultState(){
+  return {
+    adminPin: "1234",
+    productions: [...DEFAULT_PRODUCTIONS],
+    volunteers: [],
+    logs: []
+  };
+}
+
+// Local fallback loader (so kiosk still works if cloud is down)
+function loadLocalState(){
+  const raw = localStorage.getItem(KEY);
+  if(!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+// Cloud loader (Google Sheet is the source of truth)
+async function loadCloudState(){
+  const res = await fetch(WEB_APP_URL, { cache: "no-store" });
+  const text = await res.text();
+  if(!text) return null;
+  const obj = JSON.parse(text);
+  // basic sanity check
+  if(!obj || !Array.isArray(obj.volunteers) || !Array.isArray(obj.logs) || !Array.isArray(obj.productions)) return null;
+  return obj;
+}
+
+// Save to BOTH local + cloud (local first so it’s instant)
+function saveState(){
+  try{
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }catch{}
+
+  // Fire-and-forget cloud save (doesn't block UI)
+  fetch(WEB_APP_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(state)
+  }).catch(()=>{});
+}
+
+// ✅ Initialize state: load from cloud, fallback to local, fallback to default
+let state = defaultState();
+
+(async ()=>{
+  const local = loadLocalState();
+  if(local) state = local;
+
+  try{
+    const cloud = await loadCloudState();
+    if(cloud) state = cloud;
+  }catch{}
+
+  // If cloud/local were empty or invalid, keep default
+  if(!state || !Array.isArray(state.volunteers) || !Array.isArray(state.logs) || !Array.isArray(state.productions)){
+    state = defaultState();
+  }
+
+  // keep your existing backfill behavior intact
+  backfillWorkDates();
+
+  // Write whatever we ended up with back to local (and cloud)
+  saveState();
+
+  // IMPORTANT: render after state is loaded
+  renderHome();
+})();
 
     const $ = (id)=>document.getElementById(id);
 
@@ -1511,7 +1565,7 @@
               </div>
             </div>
             <div class="right">
-              <span class="badge ${isOpen ? "danger" : "ok"}">${isOpen ? "OPEN" : "CLOSED"}</span>
+              <span class="badge ${isOpen ? "" : "ok"}">${isOpen ? "OPEN" : "CLOSED"}</span>
               <button class="primary small" data-save="${escapeHtml(l.id)}">Save</button>
             </div>
           `;
@@ -1571,12 +1625,13 @@
         `, [
           mkBtn("No", "ghost", closeModal),
           mkBtn("Yes", "danger", ()=>{
-            localStorage.removeItem(KEY);
-            state = loadState();
-            closeModal();
-            toast("Reset complete");
-            renderHome();
-          })
+  state = defaultState();
+  backfillWorkDates(); // harmless; keeps pattern consistent
+  saveState();         // ✅ this clears local AND overwrites cloud with empty
+  closeModal();
+  toast("Reset complete");
+  renderHome();
+})
         ]);
       });
     }
@@ -1668,7 +1723,8 @@
     $("homeProductionFilter").addEventListener("change", renderHome);
     $("homeLastSearch").addEventListener("input", renderHome);
 
-    renderHome();
+    
   </script>
 </body>
 </html>
+
