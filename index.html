@@ -450,6 +450,33 @@
       justify-content:flex-end;
       flex-wrap: wrap;
     }
+
+    /* simple table style inside modals */
+    table.simple{
+      width:100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 12px;
+      overflow:hidden;
+    }
+    table.simple th, table.simple td{
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      font-size: 13px;
+      text-align:left;
+      vertical-align: top;
+    }
+    table.simple th{
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: rgba(0,0,0,.18);
+    }
+    table.simple tr:last-child td{ border-bottom:none; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .rightTxt{ text-align:right; }
   </style>
 </head>
 
@@ -654,7 +681,7 @@
      *  KIOSK SCRIPT
      *  ========================= */
     const DEFAULT_PRODUCTIONS = ["Company", "TBA", "TBA", "TBA"];
-    const IN_KIND_RATE = 28; // $/hr
+    const IN_KIND_RATE = 28;
 
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbye1i6xYnlVN1eGGCFzVn2iRv9sAPunJoDKXbH2tyxUJd2A5A3lxWBnhRPAlP6SpvM_ZA/exec";
     const KEY = "riseup_volunteer_kiosk_v1";
@@ -729,6 +756,9 @@
       return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
 
+    /** =========================
+     *  MODALS
+     *  ========================= */
     function openModal(title, bodyHTML, actions, opts){
       $("modalTitle").textContent = title;
       $("modalBody").innerHTML = bodyHTML;
@@ -765,6 +795,11 @@
         mkBtn("OK", "primary", closeModal)
       ]);
     }
+
+    /** =========================
+     *  ADMIN SESSION (so Back doesn't re-prompt PIN)
+     *  ========================= */
+    let adminAuthed = false;
 
     function requirePin(okFn){
       openModal("Admin PIN", `
@@ -973,7 +1008,7 @@
     }
 
     /** =========================
-     *  ADD VOLUNTEER (FIXED duplicate popup)
+     *  ADD VOLUNTEER
      *  ========================= */
     function confirmAddVolunteer(){
       openModal("Add Volunteer", `
@@ -1027,7 +1062,7 @@
     }
 
     /** =========================
-     *  CLOCK SCREEN (FIXED delete button click)
+     *  CLOCK SCREEN
      *  ========================= */
     function openClockScreen(){
       openModal("Sign In / Sign Out", `
@@ -1084,7 +1119,6 @@
             </div>
           `;
 
-          // Bind buttons by data-action (reliable everywhere)
           el.querySelector('[data-action="delete"]').onclick = ()=>{
             const did = deleteVolunteer(v.id);
             if(did){
@@ -1144,10 +1178,8 @@
     }
 
     /** =========================
-     *  ADMIN + REPORTS + BACKUP/RESTORE
-     *  (unchanged from your last working version)
+     *  REPORTS HELPERS
      *  ========================= */
-
     function reportVolunteerOptionsHTML(selectedId){
       const people = state.volunteers.slice().sort((a,b)=> (a.last+a.first).localeCompare(b.last+b.first));
       const opts = people.map(v=>{
@@ -1157,7 +1189,18 @@
       return `<option value="ALL">All Volunteers</option>${opts}`;
     }
 
-    function openReports(){
+    function getSessionsForVolunteer(volunteerId, prodSel){
+      return state.logs
+        .filter(l => l.volunteerId === volunteerId)
+        .filter(l => prodSel === "ALL" || l.production === prodSel)
+        .slice()
+        .sort((a,b)=> (b.signIn||0) - (a.signIn||0));
+    }
+
+    /** =========================
+     *  REPORTS (Admin) — updated with session breakdown
+     *  ========================= */
+    function openReports(fromAdmin){
       openModal("Reports (Print to PDF)", `
         <div class="twoCol">
           <div>
@@ -1188,8 +1231,13 @@
         <div class="divider"></div>
 
         <div class="list" id="repPreview"></div>
+
+        <div id="repDetail" style="margin-top:12px;"></div>
       `, [
-        mkBtn("Close", "ghost", closeModal),
+        mkBtn(fromAdmin ? "Back" : "Close", "ghost", ()=>{
+          if(fromAdmin){ openAdminSettingsInner(); }
+          else { closeModal(); renderHome(); }
+        }),
         mkBtn("Generate PDF", "primary", ()=> generatePrintableReport())
       ]);
 
@@ -1229,24 +1277,102 @@
           const v = findVolunteer(l.volunteerId);
           if(!v) return;
           if(lastQuery && !v.last.toLowerCase().startsWith(lastQuery)) return;
+
           const row = ensureRow(v);
           row.totalHours += l.hoursRoundedUp;
+
+          // IMPORTANT: correlate hours to the production stored on the log
           row.hoursByProd.set(l.production, (row.hoursByProd.get(l.production) || 0) + l.hoursRoundedUp);
         });
 
         return Array.from(totals.values()).sort((a,b)=> (a.v.last+a.v.first).localeCompare(b.v.last+b.v.first));
       }
 
+      function renderDetail(){
+        const prodSel = $("repProd").value;
+        const volunteerId = $("repVolunteer").value;
+        const detail = $("repDetail");
+        detail.innerHTML = "";
+
+        if(volunteerId === "ALL") return;
+
+        const v = findVolunteer(volunteerId);
+        if(!v) return;
+
+        const sessions = getSessionsForVolunteer(volunteerId, prodSel);
+
+        const completed = sessions.filter(s => s.signOut && typeof s.hoursRoundedUp === "number");
+        const total = completed.reduce((sum,s)=> sum + s.hoursRoundedUp, 0);
+
+        const byProd = new Map();
+        completed.forEach(s=>{
+          byProd.set(s.production, (byProd.get(s.production)||0) + s.hoursRoundedUp);
+        });
+
+        const byProdRows = (prodSel === "ALL" ? state.productions : [prodSel]).map(p=>{
+          const hrs = byProd.get(p) || 0;
+          return `<tr><td>${escapeHtml(p)}</td><td class="rightTxt"><b>${hrs.toFixed(1)}</b></td></tr>`;
+        }).join("");
+
+        const sessionRows = sessions.map(s=>{
+          const inTxt = s.signIn ? formatDateTime(s.signIn) : "—";
+          const outTxt = s.signOut ? formatDateTime(s.signOut) : "OPEN";
+          const hrs = (s.signOut && typeof s.hoursRoundedUp === "number") ? s.hoursRoundedUp.toFixed(1) : "—";
+          return `
+            <tr>
+              <td>${escapeHtml(s.production || "—")}</td>
+              <td class="mono">${escapeHtml(inTxt)}</td>
+              <td class="mono">${escapeHtml(outTxt)}</td>
+              <td class="rightTxt"><b>${escapeHtml(hrs)}</b></td>
+            </tr>
+          `;
+        }).join("");
+
+        detail.innerHTML = `
+          <div class="divider"></div>
+          <div class="name" style="font-size:18px; font-weight:900;">${escapeHtml(v.first)} ${escapeHtml(v.last)} — Details</div>
+          <div class="hint" style="margin-top:6px;">Totals and sessions below are tied to the <b>Production stored on each sign-in</b>.</div>
+
+          <table class="simple">
+            <thead><tr><th>Production</th><th class="rightTxt">Hours</th></tr></thead>
+            <tbody>
+              ${byProdRows}
+              <tr>
+                <td><b>Total</b></td>
+                <td class="rightTxt"><b>${total.toFixed(1)}</b></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <table class="simple">
+            <thead>
+              <tr>
+                <th>Production</th>
+                <th>Sign In</th>
+                <th>Sign Out</th>
+                <th class="rightTxt">Rounded Hrs</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sessionRows || `<tr><td colspan="4">No sessions found.</td></tr>`}
+            </tbody>
+          </table>
+        `;
+      }
+
       function renderPreview(){
         const prodSel = $("repProd").value;
         const lastQuery = norm($("repLast").value).toLowerCase();
         const volunteerId = $("repVolunteer").value;
+
         const rows = computeTotals(prodSel, lastQuery, volunteerId);
 
         const prev = $("repPreview");
         prev.innerHTML = "";
+
         if(rows.length === 0){
           prev.innerHTML = `<div class="hint">No completed sessions found for this filter yet.</div>`;
+          renderDetail();
           return;
         }
 
@@ -1275,6 +1401,8 @@
           more.textContent = `Previewing 12 of ${rows.length} volunteers. PDF includes all.`;
           prev.appendChild(more);
         }
+
+        renderDetail();
       }
 
       $("repProd").addEventListener("change", renderPreview);
@@ -1390,7 +1518,10 @@
       setTimeout(()=> w.print(), 400);
     }
 
-    function openBackupRestore(){
+    /** =========================
+     *  BACKUP/RESTORE (Admin)
+     *  ========================= */
+    function openBackupRestore(fromAdmin){
       openModal("Backup / Restore", `
         <div class="hint">
           Backup downloads a file you can save to iCloud/Drive. Restore loads that file back into this kiosk (and cloud).
@@ -1404,7 +1535,10 @@
 
         <input type="file" id="restoreFile" accept="application/json" style="display:none;" />
       `, [
-        mkBtn("Done", "primary", ()=>{ closeModal(); renderHome(); })
+        mkBtn(fromAdmin ? "Back" : "Done", "ghost", ()=>{
+          if(fromAdmin){ openAdminSettingsInner(); }
+          else { closeModal(); renderHome(); }
+        })
       ]);
 
       $("dlBackup").onclick = ()=>{
@@ -1440,6 +1574,9 @@
       };
     }
 
+    /** =========================
+     *  EDIT TIMES (Admin)
+     *  ========================= */
     function volunteerDropdownOptions(selectedId){
       const people = state.volunteers.slice().sort((a,b)=> (a.last+a.first).localeCompare(b.last+b.first));
       const opts = people.map(v=>{
@@ -1449,7 +1586,7 @@
       return `<option value="">Select a volunteer...</option>${opts}`;
     }
 
-    function openEditTimes(){
+    function openEditTimes(fromAdmin){
       openModal("Edit Times (Admin)", `
         <div class="twoCol">
           <div>
@@ -1479,7 +1616,10 @@
         <div class="list" id="editList"></div>
         <div class="hint" id="editEmpty" style="display:none; margin-top:10px;">Select a volunteer to view sessions.</div>
       `, [
-        mkBtn("Close", "primary", ()=>{ closeModal(); renderHome(); })
+        mkBtn(fromAdmin ? "Back" : "Close", "ghost", ()=>{
+          if(fromAdmin){ openAdminSettingsInner(); }
+          else { closeModal(); renderHome(); }
+        })
       ], { large:true });
 
       const selVol = $("editVolunteer");
@@ -1600,6 +1740,9 @@
       renderSessions();
     }
 
+    /** =========================
+     *  ADMIN SETTINGS (with Back flow)
+     *  ========================= */
     function resetAllData(){
       requirePin(()=>{
         openModal("Confirm Delete", `
@@ -1607,7 +1750,7 @@
             Deleting this information is not reversible. Would you like to continue?
           </div>
         `, [
-          mkBtn("No", "ghost", closeModal),
+          mkBtn("No", "ghost", ()=> openAdminSettingsInner()),
           mkBtn("Yes", "danger", ()=>{
             state = defaultState();
             saveState();
@@ -1619,67 +1762,77 @@
       });
     }
 
+    function openAdminSettingsInner(){
+      openModal("Admin Settings", `
+        <div class="twoCol">
+          <div>
+            <label>Change Admin PIN</label>
+            <input id="newPin" type="password" inputmode="numeric" placeholder="New PIN" />
+          </div>
+          <div>
+            <label>Confirm PIN</label>
+            <input id="newPin2" type="password" inputmode="numeric" placeholder="Confirm PIN" />
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <label>Productions (comma separated)</label>
+        <input id="prodList" placeholder="Company, TBA, ..." />
+
+        <div class="divider"></div>
+        <div class="hint">Admin Tools:</div>
+
+        <div class="btnRow" style="margin-top:10px;">
+          <button class="ghost" id="btnEditTimes">Edit Times</button>
+          <button class="ghost" id="btnReportsAdmin">Reports (PDF)</button>
+        </div>
+        <div class="btnRow" style="margin-top:10px;">
+          <button class="ghost" id="btnBackupAdmin">Backup / Restore</button>
+          <button class="danger" id="btnResetAllInAdmin">Reset All Data</button>
+        </div>
+      `, [
+        mkBtn("Back", "ghost", ()=>{ closeModal(); renderHome(); }),
+        mkBtn("Save", "primary", ()=>{
+          const p1 = $("newPin").value.trim();
+          const p2 = $("newPin2").value.trim();
+          if((p1 || p2) && (p1 !== p2)){ toast("PINs do not match."); return; }
+          if(p1 && p1.length < 4){ toast("PIN should be at least 4 digits."); return; }
+
+          const prods = $("prodList").value
+            .split(",")
+            .map(s=>titleCase(s))
+            .map(s=>s.trim())
+            .filter(Boolean);
+
+          if(prods.length === 0){ toast("Please enter at least one production."); return; }
+
+          if(p1) state.adminPin = p1;
+          state.productions = prods;
+
+          saveState();
+          closeModal();
+          toast("Saved!");
+          renderHome();
+        })
+      ]);
+
+      $("prodList").value = state.productions.join(", ");
+
+      $("btnEditTimes").onclick = ()=> openEditTimes(true);
+      $("btnReportsAdmin").onclick = ()=> openReports(true);
+      $("btnBackupAdmin").onclick = ()=> openBackupRestore(true);
+      $("btnResetAllInAdmin").onclick = resetAllData;
+    }
+
     function openAdminSettings(){
+      if(adminAuthed){
+        openAdminSettingsInner();
+        return;
+      }
       requirePin(()=>{
-        openModal("Admin Settings", `
-          <div class="twoCol">
-            <div>
-              <label>Change Admin PIN</label>
-              <input id="newPin" type="password" inputmode="numeric" placeholder="New PIN" />
-            </div>
-            <div>
-              <label>Confirm PIN</label>
-              <input id="newPin2" type="password" inputmode="numeric" placeholder="Confirm PIN" />
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <label>Productions (comma separated)</label>
-          <input id="prodList" placeholder="Company, TBA, ..." />
-
-          <div class="divider"></div>
-          <div class="hint">Admin Tools:</div>
-
-          <div class="btnRow" style="margin-top:10px;">
-            <button class="ghost" id="btnEditTimes">Edit Times</button>
-            <button class="ghost" id="btnReportsAdmin">Reports (PDF)</button>
-          </div>
-          <div class="btnRow" style="margin-top:10px;">
-            <button class="ghost" id="btnBackupAdmin">Backup / Restore</button>
-            <button class="danger" id="btnResetAllInAdmin">Reset All Data</button>
-          </div>
-        `, [
-          mkBtn("Cancel", "ghost", closeModal),
-          mkBtn("Save", "primary", ()=>{
-            const p1 = $("newPin").value.trim();
-            const p2 = $("newPin2").value.trim();
-            if((p1 || p2) && (p1 !== p2)){ toast("PINs do not match."); return; }
-            if(p1 && p1.length < 4){ toast("PIN should be at least 4 digits."); return; }
-
-            const prods = $("prodList").value
-              .split(",")
-              .map(s=>titleCase(s))
-              .map(s=>s.trim())
-              .filter(Boolean);
-
-            if(prods.length === 0){ toast("Please enter at least one production."); return; }
-
-            if(p1) state.adminPin = p1;
-            state.productions = prods;
-
-            saveState();
-            closeModal();
-            toast("Saved!");
-            renderHome();
-          })
-        ]);
-
-        $("prodList").value = state.productions.join(", ");
-        $("btnEditTimes").onclick = ()=> openEditTimes();
-        $("btnReportsAdmin").onclick = ()=> openReports();
-        $("btnBackupAdmin").onclick = ()=> openBackupRestore();
-        $("btnResetAllInAdmin").onclick = resetAllData;
+        adminAuthed = true;
+        openAdminSettingsInner();
       });
     }
 
