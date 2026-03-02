@@ -586,7 +586,6 @@
 
             <div style="margin-top:12px;" class="btnRow">
               <button class="ghost small" id="btnAdminSettings">Admin Settings</button>
-              <button class="danger small" id="btnResetAll">Reset All Data</button>
             </div>
           </div>
         </aside>
@@ -1136,9 +1135,6 @@
       ]);
     }
 
-    /* =========================
-       ADDED: Reports volunteer select helper
-       ========================= */
     function reportVolunteerOptionsHTML(selectedId){
       const people = state.volunteers
         .slice()
@@ -1151,9 +1147,6 @@
 
       return `<option value="ALL">All Volunteers</option>${opts}`;
     }
-    /* =========================
-       /ADDED
-       ========================= */
 
     function openReports(){
       openModal("Reports (Print to PDF)", `
@@ -1171,12 +1164,10 @@
           </div>
         </div>
 
-        <!-- ADDED: single volunteer filter -->
         <div style="margin-top:12px;">
           <label>Volunteer</label>
           <select id="repVolunteer"></select>
         </div>
-        <!-- /ADDED -->
 
         <div class="divider"></div>
 
@@ -1193,11 +1184,9 @@
         mkBtn("Generate PDF", "primary", ()=> generatePrintableReport())
       ]);
 
-      // ADDED: populate volunteer dropdown (preserves selection if re-opened)
       const repVolunteer = $("repVolunteer");
       repVolunteer.innerHTML = reportVolunteerOptionsHTML("ALL");
       repVolunteer.value = "ALL";
-      // /ADDED
 
       function computeTotals(prodSel, lastQuery, volunteerId){
         const totals = new Map();
@@ -1209,11 +1198,9 @@
           return totals.get(v.id);
         }
 
-        // For DAYS: include ANY log that matches filter (open or closed)
         const allRelevantForDays = state.logs
           .filter(l => l.signIn)
           .filter(l => prodSel === "ALL" || l.production === prodSel)
-          // ADDED: volunteer filter
           .filter(l => volunteerId === "ALL" || l.volunteerId === volunteerId);
 
         allRelevantForDays.forEach(l=>{
@@ -1225,10 +1212,8 @@
           row.days.add(d);
         });
 
-        // For HOURS: completed sessions only
         const logs = state.logs.filter(l => l.signOut && typeof l.hoursRoundedUp === "number")
           .filter(l => prodSel === "ALL" || l.production === prodSel)
-          // ADDED: volunteer filter
           .filter(l => volunteerId === "ALL" || l.volunteerId === volunteerId);
 
         logs.forEach(l=>{
@@ -1287,22 +1272,19 @@
 
       $("repProd").addEventListener("change", renderPreview);
       $("repLast").addEventListener("input", renderPreview);
-      // ADDED
       $("repVolunteer").addEventListener("change", renderPreview);
-      // /ADDED
 
       renderPreview();
 
-      // CHANGED: store computeTotals so PDF uses same filters
       openReports._computeTotals = computeTotals;
     }
 
     function generatePrintableReport(){
       const prodSel = $("repProd").value;
       const lastQuery = norm($("repLast").value).toLowerCase();
-      const volunteerId = $("repVolunteer").value; // ADDED
+      const volunteerId = $("repVolunteer").value;
 
-      const rows = openReports._computeTotals(prodSel, lastQuery, volunteerId); // CHANGED
+      const rows = openReports._computeTotals(prodSel, lastQuery, volunteerId);
 
       const now = new Date();
       const title = prodSel === "ALL" ? "All Productions" : prodSel;
@@ -1363,13 +1345,11 @@
 
       const grandValue = grandHours * IN_KIND_RATE;
 
-      // ADDED: if single volunteer selected, show their name in subtitle
       let volunteerSub = "";
       if(volunteerId !== "ALL"){
         const v = findVolunteer(volunteerId);
         if(v) volunteerSub = ` — <b>${escapeHtml(v.first)} ${escapeHtml(v.last)}</b>`;
       }
-      // /ADDED
 
       const html = `
         <!doctype html>
@@ -1579,6 +1559,31 @@
       setTimeout(()=> $("editLast")?.focus(), 50);
     }
 
+    /* =========================
+       CHANGED: Reset flow + confirmation text
+       ========================= */
+    function resetAllData(){
+      requirePin(()=>{
+        openModal("Confirm Delete", `
+          <div class="hint" style="color:#fff;">
+            Deleting this information is not reversible. Would you like to continue?
+          </div>
+        `, [
+          mkBtn("No", "ghost", closeModal),
+          mkBtn("Yes", "danger", ()=>{
+            localStorage.removeItem(KEY);
+            state = loadState();
+            closeModal();
+            toast("Reset complete");
+            renderHome();
+          })
+        ]);
+      });
+    }
+    /* =========================
+       /CHANGED
+       ========================= */
+
     function openAdminSettings(){
       requirePin(()=>{
         openModal("Admin Settings", `
@@ -1607,6 +1612,9 @@
           <div class="btnRow" style="margin-top:10px;">
             <button class="ghost" id="btnEditTimes">Edit Times</button>
             <button class="ghost" id="btnBackfillDays">Backfill Days</button>
+          </div>
+          <div class="btnRow" style="margin-top:10px;">
+            <button class="danger" id="btnResetAllInAdmin">Reset All Data</button>
           </div>
           <div class="hint" style="margin-top:8px;">
             “Edit Times” lets you adjust sign-in/sign-out times. “Backfill Days” adds missing Work Date to older logs.
@@ -1645,26 +1653,9 @@
           toast("Backfill complete");
           renderHome();
         };
-      });
-    }
 
-    function resetAllData(){
-      requirePin(()=>{
-        openModal("Reset Everything?", `
-          <div class="hint" style="color:#fff;">
-            This will permanently delete <b>all volunteers</b> and <b>all logs</b> on this kiosk.
-            Do this only if you’re starting completely over.
-          </div>
-        `, [
-          mkBtn("Cancel", "ghost", closeModal),
-          mkBtn("Yes, Reset", "danger", ()=>{
-            localStorage.removeItem(KEY);
-            state = loadState();
-            closeModal();
-            toast("Reset complete");
-            renderHome();
-          })
-        ]);
+        // NEW: Reset button inside Admin Settings (PIN-protected + confirm)
+        $("btnResetAllInAdmin").onclick = resetAllData;
       });
     }
 
@@ -1673,7 +1664,6 @@
     $("btnReports").onclick = openReports;
     $("btnBackup").onclick = openBackupRestore;
     $("btnAdminSettings").onclick = openAdminSettings;
-    $("btnResetAll").onclick = resetAllData;
 
     $("homeProductionFilter").addEventListener("change", renderHome);
     $("homeLastSearch").addEventListener("input", renderHome);
