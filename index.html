@@ -878,7 +878,7 @@
     }
 
     /* =========================
-       ADDED: delete open sign-in entry from sheet (trashcan)
+       ADDED: delete open sign-in entry from inside Sign In/Out modal
        ========================= */
     function deleteOpenSignIn(logId){
       const ok = confirm("Are you sure you want to delete?");
@@ -887,7 +887,6 @@
       const idx = state.logs.findIndex(l => l.id === logId);
       if(idx === -1){ toast("Could not find that entry."); return; }
 
-      // Only remove the row (the name on the sign-in sheet)
       state.logs.splice(idx, 1);
       saveState();
       toast("Deleted");
@@ -929,17 +928,9 @@
           <div class="right">
             <span class="badge ok">SIGNED IN</span>
             <button class="danger small">Sign Out</button>
-            <button class="ghost small" aria-label="Delete entry">🗑️</button>
           </div>
         `;
-
-        const buttons = el.querySelectorAll("button");
-        const signOutBtn = buttons[0];
-        const trashBtn = buttons[1];
-
-        signOutBtn.onclick = ()=> confirmSignOut(v.id, v, log);
-        trashBtn.onclick = ()=> deleteOpenSignIn(log.id);
-
+        el.querySelector("button").onclick = ()=> confirmSignOut(v.id, v, log);
         list.appendChild(el);
       });
 
@@ -1042,16 +1033,28 @@
               <div class="meta">${signed ? (escapeHtml(open.production) + " • Signed in: " + escapeHtml(formatDateTime(open.signIn))) : "Not signed in"}</div>
             </div>
             <div class="right">
-              ${signed ? `<span class="badge ok">SIGNED IN</span><button class="danger small">Sign Out</button>`
-                       : `<span class="badge">READY</span><button class="ok small">Sign In</button>`}
+              ${
+                signed
+                  ? `<span class="badge ok">SIGNED IN</span>
+                     <button class="danger small">Sign Out</button>
+                     <button class="ghost small" aria-label="Delete entry">🗑️</button>`
+                  : `<span class="badge">READY</span>
+                     <button class="ok small">Sign In</button>`
+              }
             </div>
           `;
-          const btn = el.querySelector("button");
+
+          const btns = el.querySelectorAll("button");
           if(signed){
-            btn.onclick = ()=> confirmSignOut(v.id, v, open);
+            const signOutBtn = btns[0];
+            const trashBtn = btns[1];
+            signOutBtn.onclick = ()=> confirmSignOut(v.id, v, open);
+            trashBtn.onclick = ()=> deleteOpenSignIn(open.id);
           }else{
-            btn.onclick = ()=> confirmSignIn(v.id, v, prod);
+            const signInBtn = btns[0];
+            signInBtn.onclick = ()=> confirmSignIn(v.id, v, prod);
           }
+
           list.appendChild(el);
         });
       }
