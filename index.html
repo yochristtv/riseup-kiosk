@@ -34,11 +34,11 @@
       min-height: 100vh;
     }
 
-    /* ===== LOGIN OVERLAY (NEW) ===== */
+    /* ===== LOGIN OVERLAY ===== */
     #loginOverlay{
       position: fixed;
       inset: 0;
-      display: none;            /* shown by JS */
+      display: none;
       align-items: center;
       justify-content: center;
       padding: 20px;
@@ -79,9 +79,7 @@
       color: var(--text);
       white-space: nowrap;
     }
-    .loginBody{
-      padding: 18px;
-    }
+    .loginBody{ padding: 18px; }
     .loginHero{
       display:flex;
       gap: 14px;
@@ -160,8 +158,7 @@
     #kioskApp{ display:none; }
     body.authed #kioskApp{ display:block; }
 
-    /* ===== KIOSK STYLES (YOUR ORIGINAL) ===== */
-
+    /* ===== KIOSK STYLES ===== */
     header{
       position: sticky; top: 0; z-index: 50;
       background: rgba(11,11,16,.72);
@@ -169,7 +166,6 @@
       border-bottom: 1px solid var(--line);
     }
 
-    /* FULL-WIDTH after login (changed from max-width: 1000px) */
     .wrap{
       max-width: 100%;
       margin:0 auto;
@@ -445,7 +441,7 @@
 
 <body>
 
-  <!-- ===== LOGIN OVERLAY (NEW) ===== -->
+  <!-- ===== LOGIN OVERLAY ===== -->
   <div id="loginOverlay" aria-label="RiseUp Private Access">
     <div class="loginCard">
       <div class="loginHead">
@@ -480,14 +476,13 @@
     </div>
   </div>
 
-  <!-- ===== KIOSK APP (YOUR ORIGINAL CONTENT) ===== -->
+  <!-- ===== KIOSK APP ===== -->
   <div id="kioskApp">
     <header>
       <div class="wrap">
         <div class="brandRow">
           <div class="brandLeft">
             <div class="logo" title="RiseUpTheatreCo">
-              <!-- Put Riseup.webp next to index.html -->
               <img src="Riseup.webp" alt="RiseUpTheatreCo logo" onerror="this.style.display='none'; this.parentElement.style.background='#111';" />
             </div>
             <div class="brandText">
@@ -496,14 +491,13 @@
             </div>
           </div>
 
-          <!-- NEW: Sign Out (forces passcode again) -->
           <button class="ghost small" id="btnSiteSignOut" type="button">Sign Out</button>
         </div>
 
         <div class="pillRow">
           <div class="pill"><b>Rounding:</b> up to next 0.1 hr</div>
           <div class="pill"><b>In-Kind:</b> $28/hr</div>
-          <div class="pill"><b>Storage:</b> on this iPad</div>
+          <div class="pill"><b>Storage:</b> cloud + local fallback</div>
         </div>
       </div>
     </header>
@@ -580,9 +574,7 @@
 
             <div class="divider"></div>
 
-            <div class="hint">
-          
-            </div>
+            <div class="hint"></div>
 
             <div style="margin-top:12px;" class="btnRow">
               <button class="ghost small" id="btnAdminSettings">Admin Settings</button>
@@ -610,7 +602,7 @@
 
   <script>
     /** =========================
-     *  LOGIN GATE (NEW)
+     *  LOGIN GATE
      *  ========================= */
     const SITE_PASSCODE = "RiseUp2026";
 
@@ -655,93 +647,20 @@
       if (e.key === "Enter") tryEnter();
     });
 
-    // Sign out forces gate again (does NOT clear kiosk data)
     btnSiteSignOut.addEventListener("click", showGate);
-
-    // Always require login on every visit:
     showGate();
 
     /** =========================
-     *  KIOSK SCRIPT (YOUR ORIGINAL)
+     *  KIOSK SCRIPT
      *  ========================= */
     const DEFAULT_PRODUCTIONS = ["Company", "TBA", "TBA", "TBA"];
     const IN_KIND_RATE = 28; // $/hr
 
-   const DEFAULT_PRODUCTIONS = ["Company", "TBA", "TBA", "TBA"];
-const IN_KIND_RATE = 28; // $/hr
+    // Cloud endpoint (Google Apps Script Web App)
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbye1i6xYnlVN1eGGCFzVn2iRv9sAPunJoDKXbH2tyxUJd2A5A3lxWBnhRPAlP6SpvM_ZA/exec";
 
-const KEY = "riseup_volunteer_kiosk_v1";
-
-// ✅ Your Google Apps Script Web App URL
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbye1i6xYnlVN1eGGCFzVn2iRv9sAPunJoDKXbH2tyxUJd2A5A3lxWBnhRPAlP6SpvM_ZA/exec";
-
-function defaultState(){
-  return {
-    adminPin: "1234",
-    productions: [...DEFAULT_PRODUCTIONS],
-    volunteers: [],
-    logs: []
-  };
-}
-
-// Local fallback loader (so kiosk still works if cloud is down)
-function loadLocalState(){
-  const raw = localStorage.getItem(KEY);
-  if(!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
-}
-
-// Cloud loader (Google Sheet is the source of truth)
-async function loadCloudState(){
-  const res = await fetch(WEB_APP_URL, { cache: "no-store" });
-  const text = await res.text();
-  if(!text) return null;
-  const obj = JSON.parse(text);
-  // basic sanity check
-  if(!obj || !Array.isArray(obj.volunteers) || !Array.isArray(obj.logs) || !Array.isArray(obj.productions)) return null;
-  return obj;
-}
-
-// Save to BOTH local + cloud (local first so it’s instant)
-function saveState(){
-  try{
-    localStorage.setItem(KEY, JSON.stringify(state));
-  }catch{}
-
-  // Fire-and-forget cloud save (doesn't block UI)
-  fetch(WEB_APP_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(state)
-  }).catch(()=>{});
-}
-
-// ✅ Initialize state: load from cloud, fallback to local, fallback to default
-let state = defaultState();
-
-(async ()=>{
-  const local = loadLocalState();
-  if(local) state = local;
-
-  try{
-    const cloud = await loadCloudState();
-    if(cloud) state = cloud;
-  }catch{}
-
-  // If cloud/local were empty or invalid, keep default
-  if(!state || !Array.isArray(state.volunteers) || !Array.isArray(state.logs) || !Array.isArray(state.productions)){
-    state = defaultState();
-  }
-
-  // keep your existing backfill behavior intact
-  backfillWorkDates();
-
-  // Write whatever we ended up with back to local (and cloud)
-  saveState();
-
-  // IMPORTANT: render after state is loaded
-  renderHome();
-})();
+    // Local fallback key (still used for offline / fast UI)
+    const KEY = "riseup_volunteer_kiosk_v1";
 
     const $ = (id)=>document.getElementById(id);
 
@@ -774,7 +693,6 @@ let state = defaultState();
       return d.toLocaleString([], { year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit" });
     }
 
-    // ====== ADDED (for "days logged in" + admin edits) ======
     function ymdLocalFromMs(ms){
       const d = new Date(ms);
       const y = d.getFullYear();
@@ -790,12 +708,11 @@ let state = defaultState();
     }
     function localInputValueToMs(val){
       if(!val) return null;
-      const d = new Date(val); // interpreted as local time
+      const d = new Date(val);
       const ms = d.getTime();
       return Number.isFinite(ms) ? ms : null;
     }
     function recomputeLogDurations(log){
-      // Recompute minutes/hoursRoundedUp based on signIn/signOut
       if(!log.signOut){
         log.minutes = null;
         log.hoursRoundedUp = null;
@@ -808,7 +725,6 @@ let state = defaultState();
       log.hoursRoundedUp = rounded;
     }
     function backfillWorkDates(){
-      // Ensure every log has workDate (day of signIn), without changing layout
       let changed = false;
       for(const l of state.logs){
         if(!l.workDate && l.signIn){
@@ -818,8 +734,10 @@ let state = defaultState();
       }
       if(changed) saveState();
     }
-    backfillWorkDates();
-    // ====== /ADDED ======
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
 
     function openModal(title, bodyHTML, actions){
       $("modalTitle").textContent = title;
@@ -870,13 +788,52 @@ let state = defaultState();
       return state.productions.map(p => `<option value="${escapeHtml(p)}" ${p===selected?"selected":""}>${escapeHtml(p)}</option>`).join("");
     }
 
-    function escapeHtml(s){
-      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    /** =========================
+     *  CLOUD + LOCAL STORAGE
+     *  ========================= */
+    function defaultState(){
+      return {
+        adminPin: "1234",
+        productions: [...DEFAULT_PRODUCTIONS],
+        volunteers: [],
+        logs: []
+      };
     }
 
-    /* =========================
-       ADDED: no-duplicate helper
-       ========================= */
+    function loadLocalState(){
+      const raw = localStorage.getItem(KEY);
+      if(!raw) return null;
+      try { return JSON.parse(raw); } catch { return null; }
+    }
+
+    async function loadCloudState(){
+      const res = await fetch(WEB_APP_URL, { cache: "no-store" });
+      const text = await res.text();
+      if(!text) return null;
+      const obj = JSON.parse(text);
+      if(!obj || !Array.isArray(obj.volunteers) || !Array.isArray(obj.logs) || !Array.isArray(obj.productions)) return null;
+      return obj;
+    }
+
+    function saveState(){
+      // Local first (instant)
+      try{
+        localStorage.setItem(KEY, JSON.stringify(state));
+      }catch{}
+
+      // Cloud save (non-blocking)
+      fetch(WEB_APP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(state)
+      }).catch(()=>{});
+    }
+
+    let state = defaultState();
+
+    /** =========================
+     *  VOLUNTEERS + LOGS
+     *  ========================= */
     function sameName(v, first, last){
       const f = norm(first).toLowerCase();
       const l = norm(last).toLowerCase();
@@ -885,20 +842,15 @@ let state = defaultState();
     function volunteerExists(first, last){
       return state.volunteers.some(v => sameName(v, first, last));
     }
-    /* =========================
-       /ADDED
-       ========================= */
 
     function addVolunteer(first, last){
       first = titleCase(first);
       last = titleCase(last);
 
-      // ====== ADDED: block duplicates + POPUP ======
       if(volunteerExists(first, last)){
         alert("That name already exists.");
         return { ok:false, msg:"That name already exists." };
       }
-      // ====== /ADDED ======
 
       const id = uid();
       state.volunteers.push({ id, first, last, createdAt: Date.now() });
@@ -924,9 +876,7 @@ let state = defaultState();
         volunteerId,
         production,
         signIn: now,
-        // ====== ADDED: day they logged in ======
         workDate: ymdLocalFromMs(now),
-        // ====== /ADDED ======
         signOut: null,
         minutes: null,
         hoursRoundedUp: null
@@ -947,15 +897,11 @@ let state = defaultState();
       log.signOut = end;
       log.minutes = minutes;
       log.hoursRoundedUp = rounded;
-      // keep workDate aligned (in case older log missing)
       if(!log.workDate) log.workDate = ymdLocalFromMs(log.signIn);
       saveState();
       return { ok:true, minutes, rounded };
     }
 
-    /* =========================
-       ADDED: delete entire volunteer (and ALL logs)
-       ========================= */
     function deleteVolunteer(volunteerId){
       const ok = confirm("Are you sure you want to delete?");
       if(!ok) return;
@@ -963,24 +909,23 @@ let state = defaultState();
       const v = findVolunteer(volunteerId);
       if(!v){ toast("Could not find that volunteer."); return; }
 
-      // Remove volunteer
       state.volunteers = state.volunteers.filter(x => x.id !== volunteerId);
-
-      // Remove ALL logs for that volunteer
       state.logs = state.logs.filter(l => l.volunteerId !== volunteerId);
 
       saveState();
       toast("Volunteer deleted");
       renderHome();
     }
-    /* =========================
-       /ADDED
-       ========================= */
 
+    /** =========================
+     *  RENDER HOME
+     *  ========================= */
     function renderHome(){
       const prodFilter = $("homeProductionFilter");
       const selected = prodFilter.value || "ALL";
-      prodFilter.innerHTML = `<option value="ALL">All Productions</option>` + state.productions.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("");
+      prodFilter.innerHTML =
+        `<option value="ALL">All Productions</option>` +
+        state.productions.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("");
       prodFilter.value = (selected === "ALL" || state.productions.includes(selected)) ? selected : "ALL";
 
       const qLast = norm($("homeLastSearch").value).toLowerCase();
@@ -1026,6 +971,9 @@ let state = defaultState();
       $("statValue").textContent = Math.round(totalHours * IN_KIND_RATE).toLocaleString();
     }
 
+    /** =========================
+     *  ADD VOLUNTEER
+     *  ========================= */
     function confirmAddVolunteer(){
       openModal("Add Volunteer", `
         <div class="twoCol">
@@ -1063,7 +1011,7 @@ let state = defaultState();
             mkBtn("Edit", "ghost", confirmAddVolunteer),
             mkBtn("Yes, Save", "primary", ()=>{
               const res = addVolunteer(firstT, lastT);
-              if(!res.ok){ return; }
+              if(!res.ok) return;
               closeModal();
               toast("Added!");
               renderHome();
@@ -1074,6 +1022,9 @@ let state = defaultState();
       setTimeout(()=> $("addFirst")?.focus(), 50);
     }
 
+    /** =========================
+     *  CLOCK SCREEN
+     *  ========================= */
     function openClockScreen(){
       openModal("Sign In / Sign Out", `
         <div class="twoCol">
@@ -1189,6 +1140,9 @@ let state = defaultState();
       ]);
     }
 
+    /** =========================
+     *  REPORTS (with volunteer filter)
+     *  ========================= */
     function reportVolunteerOptionsHTML(selectedId){
       const people = state.volunteers
         .slice()
@@ -1266,7 +1220,8 @@ let state = defaultState();
           row.days.add(d);
         });
 
-        const logs = state.logs.filter(l => l.signOut && typeof l.hoursRoundedUp === "number")
+        const logs = state.logs
+          .filter(l => l.signOut && typeof l.hoursRoundedUp === "number")
           .filter(l => prodSel === "ALL" || l.production === prodSel)
           .filter(l => volunteerId === "ALL" || l.volunteerId === volunteerId);
 
@@ -1329,7 +1284,6 @@ let state = defaultState();
       $("repVolunteer").addEventListener("change", renderPreview);
 
       renderPreview();
-
       openReports._computeTotals = computeTotals;
     }
 
@@ -1381,7 +1335,9 @@ let state = defaultState();
         grandHours += total;
 
         const datesList = Array.from(r.days || []).sort();
-        const datesHtml = datesList.length ? `<div class="days">Dates: ${escapeHtml(datesList.join(", "))}</div>` : `<div class="days">Dates: —</div>`;
+        const datesHtml = datesList.length
+          ? `<div class="days">Dates: ${escapeHtml(datesList.join(", "))}</div>`
+          : `<div class="days">Dates: —</div>`;
 
         return `
           <tr>
@@ -1436,10 +1392,13 @@ let state = defaultState();
       setTimeout(()=> w.print(), 400);
     }
 
+    /** =========================
+     *  BACKUP / RESTORE (now backups the current state object)
+     *  ========================= */
     function openBackupRestore(){
       openModal("Backup / Restore", `
         <div class="hint">
-          Backup downloads a file you can save to iCloud/Drive. Restore loads that file back into this kiosk.
+          Backup downloads a file you can save to iCloud/Drive. Restore loads that file back into this kiosk (and cloud).
         </div>
         <div class="divider"></div>
 
@@ -1477,8 +1436,8 @@ let state = defaultState();
           state = obj;
 
           backfillWorkDates();
+          saveState(); // saves local + cloud
 
-          saveState();
           toast("Restored!");
           closeModal();
           renderHome();
@@ -1488,6 +1447,9 @@ let state = defaultState();
       };
     }
 
+    /** =========================
+     *  ADMIN: EDIT TIMES
+     *  ========================= */
     function openEditTimes(){
       openModal("Edit Times (Admin)", `
         <div class="twoCol">
@@ -1565,7 +1527,7 @@ let state = defaultState();
               </div>
             </div>
             <div class="right">
-              <span class="badge ${isOpen ? "" : "ok"}">${isOpen ? "OPEN" : "CLOSED"}</span>
+              <span class="badge ${isOpen ? "danger" : "ok"}">${isOpen ? "OPEN" : "CLOSED"}</span>
               <button class="primary small" data-save="${escapeHtml(l.id)}">Save</button>
             </div>
           `;
@@ -1613,9 +1575,9 @@ let state = defaultState();
       setTimeout(()=> $("editLast")?.focus(), 50);
     }
 
-    /* =========================
-       CHANGED: Reset flow + confirmation text
-       ========================= */
+    /** =========================
+     *  RESET ALL DATA (IN ADMIN SETTINGS, PIN protected + confirm text)
+     *  ========================= */
     function resetAllData(){
       requirePin(()=>{
         openModal("Confirm Delete", `
@@ -1625,19 +1587,15 @@ let state = defaultState();
         `, [
           mkBtn("No", "ghost", closeModal),
           mkBtn("Yes", "danger", ()=>{
-  state = defaultState();
-  backfillWorkDates(); // harmless; keeps pattern consistent
-  saveState();         // ✅ this clears local AND overwrites cloud with empty
-  closeModal();
-  toast("Reset complete");
-  renderHome();
-})
+            state = defaultState();
+            saveState(); // clears local + overwrites cloud to empty dataset
+            closeModal();
+            toast("Reset complete");
+            renderHome();
+          })
         ]);
       });
     }
-    /* =========================
-       /CHANGED
-       ========================= */
 
     function openAdminSettings(){
       requirePin(()=>{
@@ -1668,9 +1626,11 @@ let state = defaultState();
             <button class="ghost" id="btnEditTimes">Edit Times</button>
             <button class="ghost" id="btnBackfillDays">Backfill Days</button>
           </div>
+
           <div class="btnRow" style="margin-top:10px;">
             <button class="danger" id="btnResetAllInAdmin">Reset All Data</button>
           </div>
+
           <div class="hint" style="margin-top:8px;">
             “Edit Times” lets you adjust sign-in/sign-out times. “Backfill Days” adds missing Work Date to older logs.
           </div>
@@ -1708,12 +1668,13 @@ let state = defaultState();
           toast("Backfill complete");
           renderHome();
         };
-
-        // NEW: Reset button inside Admin Settings (PIN-protected + confirm)
         $("btnResetAllInAdmin").onclick = resetAllData;
       });
     }
 
+    /** =========================
+     *  WIRE BUTTONS
+     *  ========================= */
     $("btnAdd").onclick = confirmAddVolunteer;
     $("btnClock").onclick = openClockScreen;
     $("btnReports").onclick = openReports;
@@ -1723,8 +1684,28 @@ let state = defaultState();
     $("homeProductionFilter").addEventListener("change", renderHome);
     $("homeLastSearch").addEventListener("input", renderHome);
 
-    
+    /** =========================
+     *  INITIALIZE: load cloud then render
+     *  ========================= */
+    (async ()=>{
+      const local = loadLocalState();
+      if(local) state = local;
+
+      try{
+        const cloud = await loadCloudState();
+        if(cloud) state = cloud;
+      }catch(e){
+        // keep local/default if cloud fails
+      }
+
+      if(!state || !Array.isArray(state.volunteers) || !Array.isArray(state.logs) || !Array.isArray(state.productions)){
+        state = defaultState();
+      }
+
+      backfillWorkDates();
+      saveState();
+      renderHome();
+    })();
   </script>
 </body>
 </html>
-
