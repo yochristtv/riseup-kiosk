@@ -821,13 +821,35 @@
       return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
 
+    /* =========================
+       ADDED: no-duplicate helper
+       ========================= */
+    function sameName(v, first, last){
+      const f = norm(first).toLowerCase();
+      const l = norm(last).toLowerCase();
+      return norm(v.first).toLowerCase() === f && norm(v.last).toLowerCase() === l;
+    }
+    function volunteerExists(first, last){
+      return state.volunteers.some(v => sameName(v, first, last));
+    }
+    /* =========================
+       /ADDED
+       ========================= */
+
     function addVolunteer(first, last){
       first = titleCase(first);
       last = titleCase(last);
+
+      // ====== ADDED: block duplicates ======
+      if(volunteerExists(first, last)){
+        return { ok:false, msg:"That volunteer already exists." };
+      }
+      // ====== /ADDED ======
+
       const id = uid();
       state.volunteers.push({ id, first, last, createdAt: Date.now() });
       saveState();
-      return id;
+      return { ok:true, id };
     }
 
     function findVolunteer(id){ return state.volunteers.find(v => v.id === id); }
@@ -878,18 +900,23 @@
     }
 
     /* =========================
-       ADDED: delete open sign-in entry from inside Sign In/Out modal
+       ADDED: delete entire volunteer (and ALL logs)
        ========================= */
-    function deleteOpenSignIn(logId){
+    function deleteVolunteer(volunteerId){
       const ok = confirm("Are you sure you want to delete?");
       if(!ok) return;
 
-      const idx = state.logs.findIndex(l => l.id === logId);
-      if(idx === -1){ toast("Could not find that entry."); return; }
+      const v = findVolunteer(volunteerId);
+      if(!v){ toast("Could not find that volunteer."); return; }
 
-      state.logs.splice(idx, 1);
+      // Remove volunteer
+      state.volunteers = state.volunteers.filter(x => x.id !== volunteerId);
+
+      // Remove ALL logs for that volunteer
+      state.logs = state.logs.filter(l => l.volunteerId !== volunteerId);
+
       saveState();
-      toast("Deleted");
+      toast("Volunteer deleted");
       renderHome();
     }
     /* =========================
@@ -970,13 +997,21 @@
           const firstT = titleCase(first);
           const lastT  = titleCase(last);
 
+          // ====== ADDED: block duplicates early (before confirm screen) ======
+          if(volunteerExists(firstT, lastT)){
+            toast("That volunteer already exists.");
+            return;
+          }
+          // ====== /ADDED ======
+
           openModal("Confirm Spelling", `
             <div class="hint">Is this correct?</div>
             <div style="margin-top:10px; font-size:26px; font-weight:900;">${escapeHtml(firstT)} ${escapeHtml(lastT)}</div>
           `, [
             mkBtn("Edit", "ghost", confirmAddVolunteer),
             mkBtn("Yes, Save", "primary", ()=>{
-              addVolunteer(firstT, lastT);
+              const res = addVolunteer(firstT, lastT);
+              if(!res.ok){ toast(res.msg); return; }
               closeModal();
               toast("Added!");
               renderHome();
@@ -1037,9 +1072,10 @@
                 signed
                   ? `<span class="badge ok">SIGNED IN</span>
                      <button class="danger small">Sign Out</button>
-                     <button class="ghost small" aria-label="Delete entry">🗑️</button>`
+                     <button class="ghost small" aria-label="Delete volunteer">🗑️</button>`
                   : `<span class="badge">READY</span>
-                     <button class="ok small">Sign In</button>`
+                     <button class="ok small">Sign In</button>
+                     <button class="ghost small" aria-label="Delete volunteer">🗑️</button>`
               }
             </div>
           `;
@@ -1049,10 +1085,12 @@
             const signOutBtn = btns[0];
             const trashBtn = btns[1];
             signOutBtn.onclick = ()=> confirmSignOut(v.id, v, open);
-            trashBtn.onclick = ()=> deleteOpenSignIn(open.id);
+            trashBtn.onclick = ()=> { deleteVolunteer(v.id); renderClockList(); };
           }else{
             const signInBtn = btns[0];
+            const trashBtn = btns[1];
             signInBtn.onclick = ()=> confirmSignIn(v.id, v, prod);
+            trashBtn.onclick = ()=> { deleteVolunteer(v.id); renderClockList(); };
           }
 
           list.appendChild(el);
