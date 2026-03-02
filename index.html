@@ -877,6 +877,26 @@
       return { ok:true, minutes, rounded };
     }
 
+    /* =========================
+       ADDED: delete open sign-in entry from sheet (trashcan)
+       ========================= */
+    function deleteOpenSignIn(logId){
+      const ok = confirm("Are you sure you want to delete?");
+      if(!ok) return;
+
+      const idx = state.logs.findIndex(l => l.id === logId);
+      if(idx === -1){ toast("Could not find that entry."); return; }
+
+      // Only remove the row (the name on the sign-in sheet)
+      state.logs.splice(idx, 1);
+      saveState();
+      toast("Deleted");
+      renderHome();
+    }
+    /* =========================
+       /ADDED
+       ========================= */
+
     function renderHome(){
       const prodFilter = $("homeProductionFilter");
       const selected = prodFilter.value || "ALL";
@@ -909,9 +929,17 @@
           <div class="right">
             <span class="badge ok">SIGNED IN</span>
             <button class="danger small">Sign Out</button>
+            <button class="ghost small" aria-label="Delete entry">🗑️</button>
           </div>
         `;
-        el.querySelector("button").onclick = ()=> confirmSignOut(v.id, v, log);
+
+        const buttons = el.querySelectorAll("button");
+        const signOutBtn = buttons[0];
+        const trashBtn = buttons[1];
+
+        signOutBtn.onclick = ()=> confirmSignOut(v.id, v, log);
+        trashBtn.onclick = ()=> deleteOpenSignIn(log.id);
+
         list.appendChild(el);
       });
 
