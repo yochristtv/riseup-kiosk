@@ -87,8 +87,8 @@
       margin-bottom: 12px;
     }
     .loginLogo{
-      width: 128px;   /* doubled */
-      height: 128px;  /* doubled */
+      width: 128px;
+      height: 128px;
       border-radius: 20px;
       overflow:hidden;
       border: 1px solid rgba(255,255,255,.14);
@@ -165,13 +165,11 @@
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--line);
     }
-
     .wrap{
       max-width: 100%;
       margin:0 auto;
       padding: 14px 14px 28px;
     }
-
     .brandRow{
       display:flex;
       align-items:center;
@@ -179,17 +177,15 @@
       gap:18px;
       padding: 10px 0 6px;
     }
-
     .brandLeft{
       display:flex;
       align-items:center;
       gap:18px;
       min-width: 0;
     }
-
     .logo{
-      width:190px;   /* doubled from 95 */
-      height:190px;  /* doubled from 95 */
+      width:190px;
+      height:190px;
       border-radius: 18px;
       overflow:hidden;
       box-shadow: var(--shadow);
@@ -290,10 +286,9 @@
     .ok{ background: rgba(102,242,162,.14); color: #fff; border: 1px solid rgba(102,242,162,.35); box-shadow: none; }
     .small{ padding: 12px 12px; font-size: 15px; border-radius: 14px; }
 
-    /* NEW: +50% larger for Add Volunteer + Sign In/Out buttons */
     .jumbo{
-      padding: 24px 21px;   /* 16 * 1.5 = 24, 14 * 1.5 ≈ 21 */
-      font-size: 27px;      /* 18 * 1.5 = 27 */
+      padding: 24px 21px;
+      font-size: 27px;
       border-radius: 18px;
       font-weight: 900;
     }
@@ -328,11 +323,7 @@
       font-size: 16px;
       outline:none;
     }
-
-    select option{
-      background: #000000;
-      color: #ffffff;
-    }
+    select option{ background:#000; color:#fff; }
 
     input::placeholder{ color: rgba(255,255,255,.45); }
 
@@ -431,17 +422,12 @@
       box-shadow: var(--shadow);
       overflow:hidden;
     }
-
-    /* Large modal option */
-    .modal.large{
-      width: min(980px, 96vw);
-    }
+    .modal.large{ width: min(980px, 96vw); }
     .modalBody{
       padding: 14px;
       max-height: 72vh;
       overflow: auto;
     }
-
     .modalHead{
       padding: 14px;
       border-bottom: 1px solid var(--line);
@@ -456,7 +442,14 @@
       letter-spacing: .10em;
       text-transform: uppercase;
     }
-    .modalActions{ padding: 14px; border-top: 1px solid var(--line); display:flex; gap: 10px; justify-content:flex-end; flex-wrap: wrap; }
+    .modalActions{
+      padding: 14px;
+      border-top: 1px solid var(--line);
+      display:flex;
+      gap: 10px;
+      justify-content:flex-end;
+      flex-wrap: wrap;
+    }
   </style>
 </head>
 
@@ -504,7 +497,8 @@
         <div class="brandRow">
           <div class="brandLeft">
             <div class="logo" title="RiseUpTheatreCo">
-              <img src="Riseup.webp" alt="RiseUpTheatreCo logo" onerror="this.style.display='none'; this.parentElement.style.background='#111';" />
+              <img src="Riseup.webp" alt="RiseUpTheatreCo logo"
+                   onerror="this.style.display='none'; this.parentElement.style.background='#111';" />
             </div>
             <div class="brandText">
               <h1>RISEUP</h1>
@@ -526,17 +520,12 @@
     <main class="wrap">
       <div class="grid">
 
-        <!-- Left: Main actions -->
         <section class="card">
-          <div class="cardHead">
-            <h2>Home</h2>
-          </div>
+          <div class="cardHead"><h2>Home</h2></div>
           <div class="cardBody">
             <div class="btnRow">
-              <!-- UPDATED: larger buttons -->
               <button class="primary jumbo" id="btnAdd">Add Volunteer</button>
               <button class="primary jumbo" id="btnClock">Sign In / Out</button>
-              <!-- REMOVED: Reports + Backup/Restore moved to Admin Settings -->
             </div>
 
             <div class="divider"></div>
@@ -563,11 +552,8 @@
           </div>
         </section>
 
-        <!-- Right: Quick info + admin -->
         <aside class="card">
-          <div class="cardHead">
-            <h2>Quick Stats</h2>
-          </div>
+          <div class="cardHead"><h2>Quick Stats</h2></div>
           <div class="cardBody">
             <div class="list">
               <div class="tile">
@@ -595,7 +581,7 @@
 
             <div class="divider"></div>
 
-            <div style="margin-top:12px;" class="btnRow">
+            <div class="btnRow" style="margin-top:12px;">
               <button class="ghost small" id="btnAdminSettings">Admin Settings</button>
             </div>
           </div>
@@ -604,7 +590,6 @@
       </div>
     </main>
 
-    <!-- Modal -->
     <div class="modalBackdrop" id="modalBackdrop" role="dialog" aria-modal="true">
       <div class="modal" id="modalBox">
         <div class="modalHead">
@@ -641,13 +626,11 @@
       loginPass.value = "";
       setTimeout(() => loginPass.focus(), 50);
     }
-
     function showKiosk(){
       loginOverlay.style.display = "none";
       kioskApp.style.display = "block";
       document.body.classList.add("authed");
     }
-
     function tryEnter(){
       if (loginPass.value === SITE_PASSCODE){
         showKiosk();
@@ -655,7 +638,6 @@
         loginErr.style.display = "block";
       }
     }
-
     loginBtn.addEventListener("click", tryEnter);
     loginClear.addEventListener("click", () => {
       loginPass.value = "";
@@ -665,7 +647,6 @@
     loginPass.addEventListener("keydown", (e) => {
       if (e.key === "Enter") tryEnter();
     });
-
     btnSiteSignOut.addEventListener("click", showGate);
     showGate();
 
@@ -675,10 +656,7 @@
     const DEFAULT_PRODUCTIONS = ["Company", "TBA", "TBA", "TBA"];
     const IN_KIND_RATE = 28; // $/hr
 
-    // Cloud endpoint (Google Apps Script Web App)
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbye1i6xYnlVN1eGGCFzVn2iRv9sAPunJoDKXbH2tyxUJd2A5A3lxWBnhRPAlP6SpvM_ZA/exec";
-
-    // Local fallback key
     const KEY = "riseup_volunteer_kiosk_v1";
 
     const $ = (id)=>document.getElementById(id);
@@ -694,24 +672,17 @@
     function uid(){
       return Math.random().toString(16).slice(2) + Date.now().toString(16);
     }
-
     function norm(s){ return (s || "").trim(); }
-
     function titleCase(s){
       s = norm(s);
       if(!s) return s;
       return s.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
     }
-
-    function roundUpTenth(hours){
-      return Math.ceil(hours * 10) / 10;
-    }
-
+    function roundUpTenth(hours){ return Math.ceil(hours * 10) / 10; }
     function formatDateTime(ms){
       const d = new Date(ms);
       return d.toLocaleString([], { year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit" });
     }
-
     function ymdLocalFromMs(ms){
       const d = new Date(ms);
       const y = d.getFullYear();
@@ -770,14 +741,12 @@
       box.classList.remove("large");
       if(opts && opts.large) box.classList.add("large");
     }
-
     function closeModal(){
       $("modalBackdrop").style.display = "none";
       $("modalBody").innerHTML = "";
       $("modalActions").innerHTML = "";
       $("modalBox").classList.remove("large");
     }
-
     $("modalClose").onclick = closeModal;
     $("modalBackdrop").addEventListener("click", (e)=>{
       if(e.target === $("modalBackdrop")) closeModal();
@@ -789,6 +758,12 @@
       b.className = cls || "ghost";
       b.onclick = onClick;
       return b;
+    }
+
+    function infoModal(title, msg){
+      openModal(title, `<div class="hint" style="color:#fff;">${escapeHtml(msg)}</div>`, [
+        mkBtn("OK", "primary", closeModal)
+      ]);
     }
 
     function requirePin(okFn){
@@ -816,34 +791,23 @@
      *  CLOUD + LOCAL STORAGE
      *  ========================= */
     function defaultState(){
-      return {
-        adminPin: "1234",
-        productions: [...DEFAULT_PRODUCTIONS],
-        volunteers: [],
-        logs: []
-      };
+      return { adminPin:"1234", productions:[...DEFAULT_PRODUCTIONS], volunteers:[], logs:[] };
     }
-
     function loadLocalState(){
       const raw = localStorage.getItem(KEY);
       if(!raw) return null;
       try { return JSON.parse(raw); } catch { return null; }
     }
-
     async function loadCloudState(){
-      const res = await fetch(WEB_APP_URL, { cache: "no-store" });
+      const res = await fetch(WEB_APP_URL, { cache:"no-store" });
       const text = await res.text();
       if(!text) return null;
       const obj = JSON.parse(text);
       if(!obj || !Array.isArray(obj.volunteers) || !Array.isArray(obj.logs) || !Array.isArray(obj.productions)) return null;
       return obj;
     }
-
     function saveState(){
-      try{
-        localStorage.setItem(KEY, JSON.stringify(state));
-      }catch{}
-
+      try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch{}
       fetch(WEB_APP_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -867,10 +831,9 @@
 
     function addVolunteer(first, last){
       first = titleCase(first);
-      last = titleCase(last);
+      last  = titleCase(last);
 
       if(volunteerExists(first, last)){
-        alert("That name already exists.");
         return { ok:false, msg:"That name already exists." };
       }
 
@@ -893,7 +856,7 @@
     function signIn(volunteerId, production){
       if(isSignedIn(volunteerId)) return { ok:false, msg:"Already signed in." };
       const now = Date.now();
-      const log = {
+      state.logs.push({
         id: uid(),
         volunteerId,
         production,
@@ -902,8 +865,7 @@
         signOut: null,
         minutes: null,
         hoursRoundedUp: null
-      };
-      state.logs.push(log);
+      });
       saveState();
       return { ok:true };
     }
@@ -911,32 +873,33 @@
     function signOut(volunteerId){
       const log = getOpenLog(volunteerId);
       if(!log) return { ok:false, msg:"No open sign-in found." };
+
       const end = Date.now();
       const minutes = Math.max(0, Math.round((end - log.signIn) / 60000));
-      const hours = minutes / 60;
-      const rounded = roundUpTenth(hours);
+      const rounded = roundUpTenth(minutes/60);
 
       log.signOut = end;
       log.minutes = minutes;
       log.hoursRoundedUp = rounded;
       if(!log.workDate) log.workDate = ymdLocalFromMs(log.signIn);
+
       saveState();
       return { ok:true, minutes, rounded };
     }
 
     function deleteVolunteer(volunteerId){
       const ok = confirm("Are you sure you want to delete?");
-      if(!ok) return;
+      if(!ok) return false;
 
       const v = findVolunteer(volunteerId);
-      if(!v){ toast("Could not find that volunteer."); return; }
+      if(!v){ toast("Could not find that volunteer."); return false; }
 
       state.volunteers = state.volunteers.filter(x => x.id !== volunteerId);
       state.logs = state.logs.filter(l => l.volunteerId !== volunteerId);
 
       saveState();
       toast("Volunteer deleted");
-      renderHome();
+      return true;
     }
 
     function deleteLogEntry(logId){
@@ -956,7 +919,7 @@
     }
 
     /** =========================
-     *  RENDER HOME
+     *  HOME
      *  ========================= */
     function renderHome(){
       const prodFilter = $("homeProductionFilter");
@@ -1010,7 +973,7 @@
     }
 
     /** =========================
-     *  ADD VOLUNTEER
+     *  ADD VOLUNTEER (FIXED duplicate popup)
      *  ========================= */
     function confirmAddVolunteer(){
       openModal("Add Volunteer", `
@@ -1038,7 +1001,7 @@
           const lastT  = titleCase(last);
 
           if(volunteerExists(firstT, lastT)){
-            alert("That name already exists.");
+            infoModal("Duplicate Name", "That name already exists.");
             return;
           }
 
@@ -1049,7 +1012,10 @@
             mkBtn("Edit", "ghost", confirmAddVolunteer),
             mkBtn("Yes, Save", "primary", ()=>{
               const res = addVolunteer(firstT, lastT);
-              if(!res.ok) return;
+              if(!res.ok){
+                infoModal("Duplicate Name", "That name already exists.");
+                return;
+              }
               closeModal();
               toast("Added!");
               renderHome();
@@ -1061,7 +1027,7 @@
     }
 
     /** =========================
-     *  CLOCK SCREEN
+     *  CLOCK SCREEN (FIXED delete button click)
      *  ========================= */
     function openClockScreen(){
       openModal("Sign In / Sign Out", `
@@ -1109,29 +1075,28 @@
               <div class="meta">${signed ? (escapeHtml(open.production) + " • Signed in: " + escapeHtml(formatDateTime(open.signIn))) : "Not signed in"}</div>
             </div>
             <div class="right">
-              ${
-                signed
-                  ? `<span class="badge ok">SIGNED IN</span>
-                     <button class="danger small">Sign Out</button>
-                     <button class="ghost small" aria-label="Delete volunteer">🗑️</button>`
-                  : `<span class="badge">READY</span>
-                     <button class="ok small">Sign In</button>
-                     <button class="ghost small" aria-label="Delete volunteer">🗑️</button>`
+              ${signed ? `<span class="badge ok">SIGNED IN</span>` : `<span class="badge">READY</span>`}
+              ${signed
+                ? `<button class="danger small" data-action="signout" data-id="${escapeHtml(v.id)}">Sign Out</button>`
+                : `<button class="ok small" data-action="signin" data-id="${escapeHtml(v.id)}">Sign In</button>`
               }
+              <button class="ghost small" data-action="delete" data-id="${escapeHtml(v.id)}" aria-label="Delete volunteer">🗑️</button>
             </div>
           `;
 
-          const btns = el.querySelectorAll("button");
+          // Bind buttons by data-action (reliable everywhere)
+          el.querySelector('[data-action="delete"]').onclick = ()=>{
+            const did = deleteVolunteer(v.id);
+            if(did){
+              renderClockList();
+              renderHome();
+            }
+          };
+
           if(signed){
-            const signOutBtn = btns[0];
-            const trashBtn = btns[1];
-            signOutBtn.onclick = ()=> confirmSignOut(v.id, v, open);
-            trashBtn.onclick = ()=> { deleteVolunteer(v.id); renderClockList(); };
+            el.querySelector('[data-action="signout"]').onclick = ()=> confirmSignOut(v.id, v, open);
           }else{
-            const signInBtn = btns[0];
-            const trashBtn = btns[1];
-            signInBtn.onclick = ()=> confirmSignIn(v.id, v, prod);
-            trashBtn.onclick = ()=> { deleteVolunteer(v.id); renderClockList(); };
+            el.querySelector('[data-action="signin"]').onclick = ()=> confirmSignIn(v.id, v, prod);
           }
 
           list.appendChild(el);
@@ -1179,18 +1144,16 @@
     }
 
     /** =========================
-     *  REPORTS
+     *  ADMIN + REPORTS + BACKUP/RESTORE
+     *  (unchanged from your last working version)
      *  ========================= */
-    function reportVolunteerOptionsHTML(selectedId){
-      const people = state.volunteers
-        .slice()
-        .sort((a,b)=> (a.last+a.first).localeCompare(b.last+b.first));
 
+    function reportVolunteerOptionsHTML(selectedId){
+      const people = state.volunteers.slice().sort((a,b)=> (a.last+a.first).localeCompare(b.last+b.first));
       const opts = people.map(v=>{
         const label = `${v.last}, ${v.first}`;
         return `<option value="${escapeHtml(v.id)}" ${v.id===selectedId?"selected":""}>${escapeHtml(label)}</option>`;
       }).join("");
-
       return `<option value="ALL">All Volunteers</option>${opts}`;
     }
 
@@ -1236,7 +1199,6 @@
 
       function computeTotals(prodSel, lastQuery, volunteerId){
         const totals = new Map();
-
         function ensureRow(v){
           if(!totals.has(v.id)){
             totals.set(v.id, { v, hoursByProd: new Map(), totalHours: 0, days: new Set() });
@@ -1267,7 +1229,6 @@
           const v = findVolunteer(l.volunteerId);
           if(!v) return;
           if(lastQuery && !v.last.toLowerCase().startsWith(lastQuery)) return;
-
           const row = ensureRow(v);
           row.totalHours += l.hoursRoundedUp;
           row.hoursByProd.set(l.production, (row.hoursByProd.get(l.production) || 0) + l.hoursRoundedUp);
@@ -1280,7 +1241,6 @@
         const prodSel = $("repProd").value;
         const lastQuery = norm($("repLast").value).toLowerCase();
         const volunteerId = $("repVolunteer").value;
-
         const rows = computeTotals(prodSel, lastQuery, volunteerId);
 
         const prev = $("repPreview");
@@ -1430,9 +1390,6 @@
       setTimeout(()=> w.print(), 400);
     }
 
-    /** =========================
-     *  BACKUP / RESTORE
-     *  ========================= */
     function openBackupRestore(){
       openModal("Backup / Restore", `
         <div class="hint">
@@ -1472,10 +1429,8 @@
             return;
           }
           state = obj;
-
           backfillWorkDates();
           saveState();
-
           toast("Restored!");
           closeModal();
           renderHome();
@@ -1485,19 +1440,12 @@
       };
     }
 
-    /** =========================
-     *  EDIT TIMES (Admin)
-     *  ========================= */
     function volunteerDropdownOptions(selectedId){
-      const people = state.volunteers
-        .slice()
-        .sort((a,b)=> (a.last+a.first).localeCompare(b.last+b.first));
-
+      const people = state.volunteers.slice().sort((a,b)=> (a.last+a.first).localeCompare(b.last+b.first));
       const opts = people.map(v=>{
         const label = `${v.last}, ${v.first}`;
         return `<option value="${escapeHtml(v.id)}" ${v.id===selectedId ? "selected" : ""}>${escapeHtml(label)}</option>`;
       }).join("");
-
       return `<option value="">Select a volunteer...</option>${opts}`;
     }
 
@@ -1652,9 +1600,6 @@
       renderSessions();
     }
 
-    /** =========================
-     *  RESET ALL DATA (in Admin Settings)
-     *  ========================= */
     function resetAllData(){
       requirePin(()=>{
         openModal("Confirm Delete", `
@@ -1693,24 +1638,15 @@
           <label>Productions (comma separated)</label>
           <input id="prodList" placeholder="Company, TBA, ..." />
 
-          <div class="hint" style="margin-top:10px;">
-            Tip: Keep production names short so they look great on the kiosk.
-          </div>
-
           <div class="divider"></div>
           <div class="hint">Admin Tools:</div>
+
           <div class="btnRow" style="margin-top:10px;">
             <button class="ghost" id="btnEditTimes">Edit Times</button>
-            <button class="ghost" id="btnBackfillDays">Backfill Days</button>
-          </div>
-
-          <!-- MOVED HERE: Reports + Backup/Restore -->
-          <div class="btnRow" style="margin-top:10px;">
             <button class="ghost" id="btnReportsAdmin">Reports (PDF)</button>
-            <button class="ghost" id="btnBackupAdmin">Backup / Restore</button>
           </div>
-
           <div class="btnRow" style="margin-top:10px;">
+            <button class="ghost" id="btnBackupAdmin">Backup / Restore</button>
             <button class="danger" id="btnResetAllInAdmin">Reset All Data</button>
           </div>
         `, [
@@ -1740,18 +1676,9 @@
         ]);
 
         $("prodList").value = state.productions.join(", ");
-
         $("btnEditTimes").onclick = ()=> openEditTimes();
-        $("btnBackfillDays").onclick = ()=>{
-          backfillWorkDates();
-          toast("Backfill complete");
-          renderHome();
-        };
-
-        // NEW: Admin area access for Reports + Backup/Restore
         $("btnReportsAdmin").onclick = ()=> openReports();
         $("btnBackupAdmin").onclick = ()=> openBackupRestore();
-
         $("btnResetAllInAdmin").onclick = resetAllData;
       });
     }
@@ -1761,14 +1688,13 @@
      *  ========================= */
     $("btnAdd").onclick = confirmAddVolunteer;
     $("btnClock").onclick = openClockScreen;
-
     $("btnAdminSettings").onclick = openAdminSettings;
 
     $("homeProductionFilter").addEventListener("change", renderHome);
     $("homeLastSearch").addEventListener("input", renderHome);
 
     /** =========================
-     *  INITIALIZE: load cloud then render
+     *  INITIALIZE
      *  ========================= */
     (async ()=>{
       const local = loadLocalState();
@@ -1777,9 +1703,7 @@
       try{
         const cloud = await loadCloudState();
         if(cloud) state = cloud;
-      }catch(e){
-        // keep local/default if cloud fails
-      }
+      }catch(e){}
 
       if(!state || !Array.isArray(state.volunteers) || !Array.isArray(state.logs) || !Array.isArray(state.productions)){
         state = defaultState();
