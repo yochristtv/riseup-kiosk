@@ -998,12 +998,10 @@
           const firstT = titleCase(first);
           const lastT  = titleCase(last);
 
-          // ====== CHANGED: duplicates now POPUP prompt ======
           if(volunteerExists(firstT, lastT)){
             alert("That name already exists.");
             return;
           }
-          // ====== /CHANGED ======
 
           openModal("Confirm Spelling", `
             <div class="hint">Is this correct?</div>
@@ -1138,6 +1136,25 @@
       ]);
     }
 
+    /* =========================
+       ADDED: Reports volunteer select helper
+       ========================= */
+    function reportVolunteerOptionsHTML(selectedId){
+      const people = state.volunteers
+        .slice()
+        .sort((a,b)=> (a.last+a.first).localeCompare(b.last+b.first));
+
+      const opts = people.map(v=>{
+        const label = `${v.last}, ${v.first}`;
+        return `<option value="${escapeHtml(v.id)}" ${v.id===selectedId?"selected":""}>${escapeHtml(label)}</option>`;
+      }).join("");
+
+      return `<option value="ALL">All Volunteers</option>${opts}`;
+    }
+    /* =========================
+       /ADDED
+       ========================= */
+
     function openReports(){
       openModal("Reports (Print to PDF)", `
         <div class="twoCol">
@@ -1154,6 +1171,13 @@
           </div>
         </div>
 
+        <!-- ADDED: single volunteer filter -->
+        <div style="margin-top:12px;">
+          <label>Volunteer</label>
+          <select id="repVolunteer"></select>
+        </div>
+        <!-- /ADDED -->
+
         <div class="divider"></div>
 
         <div class="hint">
@@ -1169,7 +1193,13 @@
         mkBtn("Generate PDF", "primary", ()=> generatePrintableReport())
       ]);
 
-      function computeTotals(prodSel, lastQuery){
+      // ADDED: populate volunteer dropdown (preserves selection if re-opened)
+      const repVolunteer = $("repVolunteer");
+      repVolunteer.innerHTML = reportVolunteerOptionsHTML("ALL");
+      repVolunteer.value = "ALL";
+      // /ADDED
+
+      function computeTotals(prodSel, lastQuery, volunteerId){
         const totals = new Map();
 
         function ensureRow(v){
@@ -1179,9 +1209,12 @@
           return totals.get(v.id);
         }
 
+        // For DAYS: include ANY log that matches filter (open or closed)
         const allRelevantForDays = state.logs
           .filter(l => l.signIn)
-          .filter(l => prodSel === "ALL" || l.production === prodSel);
+          .filter(l => prodSel === "ALL" || l.production === prodSel)
+          // ADDED: volunteer filter
+          .filter(l => volunteerId === "ALL" || l.volunteerId === volunteerId);
 
         allRelevantForDays.forEach(l=>{
           const v = findVolunteer(l.volunteerId);
@@ -1192,8 +1225,11 @@
           row.days.add(d);
         });
 
+        // For HOURS: completed sessions only
         const logs = state.logs.filter(l => l.signOut && typeof l.hoursRoundedUp === "number")
-          .filter(l => prodSel === "ALL" || l.production === prodSel);
+          .filter(l => prodSel === "ALL" || l.production === prodSel)
+          // ADDED: volunteer filter
+          .filter(l => volunteerId === "ALL" || l.volunteerId === volunteerId);
 
         logs.forEach(l=>{
           const v = findVolunteer(l.volunteerId);
@@ -1211,7 +1247,9 @@
       function renderPreview(){
         const prodSel = $("repProd").value;
         const lastQuery = norm($("repLast").value).toLowerCase();
-        const rows = computeTotals(prodSel, lastQuery);
+        const volunteerId = $("repVolunteer").value;
+
+        const rows = computeTotals(prodSel, lastQuery, volunteerId);
 
         const prev = $("repPreview");
         prev.innerHTML = "";
@@ -1249,15 +1287,22 @@
 
       $("repProd").addEventListener("change", renderPreview);
       $("repLast").addEventListener("input", renderPreview);
+      // ADDED
+      $("repVolunteer").addEventListener("change", renderPreview);
+      // /ADDED
+
       renderPreview();
 
+      // CHANGED: store computeTotals so PDF uses same filters
       openReports._computeTotals = computeTotals;
     }
 
     function generatePrintableReport(){
       const prodSel = $("repProd").value;
       const lastQuery = norm($("repLast").value).toLowerCase();
-      const rows = openReports._computeTotals(prodSel, lastQuery);
+      const volunteerId = $("repVolunteer").value; // ADDED
+
+      const rows = openReports._computeTotals(prodSel, lastQuery, volunteerId); // CHANGED
 
       const now = new Date();
       const title = prodSel === "ALL" ? "All Productions" : prodSel;
@@ -1318,12 +1363,20 @@
 
       const grandValue = grandHours * IN_KIND_RATE;
 
+      // ADDED: if single volunteer selected, show their name in subtitle
+      let volunteerSub = "";
+      if(volunteerId !== "ALL"){
+        const v = findVolunteer(volunteerId);
+        if(v) volunteerSub = ` — <b>${escapeHtml(v.first)} ${escapeHtml(v.last)}</b>`;
+      }
+      // /ADDED
+
       const html = `
         <!doctype html>
         <html><head><meta charset="utf-8" />${styles}</head>
         <body>
           <h1>RiseUp Theatre Company</h1>
-          <div class="sub">Volunteer Hours Report — <b>${escapeHtml(title)}</b></div>
+          <div class="sub">Volunteer Hours Report — <b>${escapeHtml(title)}</b>${volunteerSub}</div>
           <div class="meta">
             Generated: ${now.toLocaleString()}<br/>
             Rounding: up to next 0.1 hr • In-Kind Rate: $${IN_KIND_RATE}/hr
