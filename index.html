@@ -33,9 +33,6 @@
 
   * { box-sizing: border-box; }
 
-  /* ===== MARTINI GLASS CURSOR =====
-     Note: Some browsers restrict data-URI cursors; fallback is pointer.
-  */
   html, body{
     cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='32'%20height='32'%20viewBox='0%200%2032%2032'%3E%3Cpath%20d='M6%206h20l-10%2011z'%20fill='none'%20stroke='%237df0ff'%20stroke-width='2'%20stroke-linejoin='round'/%3E%3Cpath%20d='M16%2017v7'%20stroke='%237df0ff'%20stroke-width='2'%20stroke-linecap='round'/%3E%3Cpath%20d='M12%2026h8'%20stroke='%237df0ff'%20stroke-width='2'%20stroke-linecap='round'/%3E%3Ccircle%20cx='22'%20cy='9'%20r='2'%20fill='%23ff69b4'/%3E%3Cpath%20d='M20.6%207.7l3.8-3.1'%20stroke='%23ff69b4'%20stroke-width='2'%20stroke-linecap='round'/%3E%3C/svg%3E") 6 2, pointer;
   }
@@ -45,7 +42,6 @@
     font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif;
     color:var(--text);
 
-    /* More prominent background colors */
     background:
       radial-gradient(1200px 700px at 25% 10%, rgba(125,240,255,.28), transparent 60%),
       radial-gradient(900px 500px at 80% 35%, rgba(255,105,180,.22), transparent 55%),
@@ -73,7 +69,6 @@
     mix-blend-mode: screen;
   }
 
-  /* Ensure app layers above skyline */
   #loginOverlay, #kioskApp { position: relative; z-index: 1; }
 
   /* ===== LOGIN OVERLAY ===== */
@@ -199,7 +194,6 @@
   .loginPrimary{ background: var(--btn); color: var(--btnText); }
   .loginGhost{ background: rgba(255,255,255,.08); color: var(--text); box-shadow: none; }
 
-  /* Hide kiosk until authed */
   #kioskApp{ display:none; }
   body.authed #kioskApp{ display:block; }
 
@@ -303,7 +297,6 @@
     main .grid{ grid-template-columns: 1.2fr .8fr; }
   }
 
-  /* ===== COMPANY NEON BORDERS ON EVERYTHING ===== */
   .card{
     background:
       linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.035)),
@@ -573,7 +566,6 @@
   .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
   .rightTxt{ text-align:right; }
 
-  /* ===== GLOW PULSE ANIMATION ===== */
   @keyframes glowPulse {
     0%   { box-shadow: 0 0 0 rgba(125,240,255,0), 0 10px 30px rgba(0,0,0,.28); transform: scale(1); }
     35%  { box-shadow: 0 0 0 2px rgba(125,240,255,.24), 0 0 18px rgba(125,240,255,.22), 0 0 12px rgba(255,105,180,.16), 0 12px 34px rgba(0,0,0,.34); transform: scale(1.01); }
@@ -583,7 +575,7 @@
   .pulseGlow{
     animation: glowPulse 800ms ease-out 1;
   }
-</style>
+  </style>
 </head>
 
 <body>
@@ -628,7 +620,6 @@
     <header>
       <div class="wrap">
 
-        <!-- Centered brand -->
         <div class="brandRow">
           <div class="logo" title="RiseUpTheatreCo">
             <img src="Riseup.webp" alt="RiseUpTheatreCo logo"
@@ -643,7 +634,6 @@
           <button class="ghost small signOutBtn" id="btnSiteSignOut" type="button">Sign Out</button>
         </div>
 
-        <!-- Only storage bubble remains -->
         <div class="pillRow">
           <div class="pill"><b>Storage:</b> cloud + local fallback</div>
         </div>
@@ -864,6 +854,35 @@
     }
 
     /** =========================
+     *  REPORT HELPERS (multi-production + date range)
+     *  ========================= */
+    function clampYmdRange(fromYmd, toYmd){
+      const f = norm(fromYmd) || null;
+      const t = norm(toYmd) || null;
+      if(f && t && f > t) return { from: t, to: f };
+      return { from: f, to: t };
+    }
+    function inYmdRange(ymd, fromYmd, toYmd){
+      if(!ymd) return false;
+      if(fromYmd && ymd < fromYmd) return false;
+      if(toYmd && ymd > toYmd) return false;
+      return true;
+    }
+    function prodSetFromChecks(containerId){
+      const box = $(containerId);
+      const checks = Array.from(box.querySelectorAll('input[type="checkbox"][data-prod]'));
+      const selected = checks.filter(c=>c.checked).map(c=>c.getAttribute("data-prod"));
+      return new Set(selected);
+    }
+    function setChecksFromProdSet(containerId, prodSet){
+      const box = $(containerId);
+      Array.from(box.querySelectorAll('input[type="checkbox"][data-prod]')).forEach(c=>{
+        const p = c.getAttribute("data-prod");
+        c.checked = prodSet.has(p);
+      });
+    }
+
+    /** =========================
      *  PULSE / HIGHLIGHT
      *  ========================= */
     let lastPulse = { type:null, volunteerId:null, logId:null, ts:0 };
@@ -951,7 +970,6 @@
       try { return JSON.parse(raw); } catch { return null; }
     }
 
-    // More robust: tries JSON first, then text->JSON
     async function loadCloudState(){
       const res = await fetch(WEB_APP_URL, { cache:"no-store" });
       if(!res.ok) return null;
@@ -1223,13 +1241,10 @@
         mkBtn("Done", "primary", ()=>{ closeModal(); renderHome(); })
       ]);
 
-      // ===== FIX: Event delegation so the 🗑️ always works in every browser =====
       const clockList = $("clockList");
 
       function renderClockList(){
         const q = norm($("clockSearch").value).toLowerCase();
-        const prod = $("clockProd").value;
-
         const people = state.volunteers
           .filter(v => !q || v.last.toLowerCase().startsWith(q))
           .sort((a,b)=> (a.last+a.first).localeCompare(b.last+b.first));
@@ -1269,9 +1284,11 @@
         });
       }
 
-      // Delegated click handler (works for re-rendered buttons across all browsers)
+      // Delegated click handler (Safari/iOS safe)
       clockList.onclick = (e) => {
-        const btn = e.target.closest("button[data-action]");
+        // Safari/iOS can fire clicks with a Text node target (e.g., tapping the emoji)
+        const base = (e.target && e.target.nodeType === 3) ? e.target.parentElement : e.target; // 3 = TEXT_NODE
+        const btn = base?.closest?.("button[data-action]");
         if(!btn) return;
 
         const action = btn.getAttribute("data-action");
@@ -1346,7 +1363,6 @@
 
     /** =========================
      *  REPORTS / BACKUP / EDIT TIMES / ADMIN SETTINGS
-     *  (unchanged)
      *  ========================= */
 
     function reportVolunteerOptionsHTML(selectedId){
@@ -1358,33 +1374,54 @@
       return `<option value="ALL">All Volunteers</option>${opts}`;
     }
 
-    function getSessionsForVolunteer(volunteerId, prodSel){
-      return state.logs
-        .filter(l => l.volunteerId === volunteerId)
-        .filter(l => prodSel === "ALL" || l.production === prodSel)
-        .slice()
-        .sort((a,b)=> (b.signIn||0) - (a.signIn||0));
-    }
-
+    // UPDATED REPORTS: multi-production + date range
     function openReports(fromAdmin){
+      const repProdSet = new Set(state.productions);
+
+      function prodChecklistHTML(){
+        return state.productions.map(p=>`
+          <div style="display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid rgba(255,255,255,.10); border-radius:12px; background:rgba(0,0,0,.18);">
+            <input type="checkbox" data-prod="${escapeHtml(p)}" checked />
+            <div style="font-weight:800;">${escapeHtml(p)}</div>
+          </div>
+        `).join("");
+      }
+
       openModal("Reports (Print to PDF)", `
         <div class="twoCol">
           <div>
-            <label>Production</label>
-            <select id="repProd">
-              <option value="ALL">All Productions</option>
-              ${state.productions.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("")}
-            </select>
+            <label>Productions (multi-select)</label>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+              <button class="ghost small" type="button" id="repSelectAll">Select All</button>
+              <button class="ghost small" type="button" id="repSelectNone">Select None</button>
+            </div>
+            <div id="repProdBox" class="list" style="margin-top:0;">${prodChecklistHTML()}</div>
+            <div class="hint" style="margin-top:8px;">Tip: checkboxes are easier than multi-select dropdowns on iPad.</div>
           </div>
+
           <div>
+            <label>Date Range (optional)</label>
+            <div class="twoCol">
+              <div>
+                <label style="margin-top:0;">Start</label>
+                <input id="repFrom" type="date" />
+              </div>
+              <div>
+                <label style="margin-top:0;">End</label>
+                <input id="repTo" type="date" />
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
             <label>Search Last Name</label>
             <input id="repLast" placeholder="Optional..." />
-          </div>
-        </div>
 
-        <div style="margin-top:12px;">
-          <label>Volunteer</label>
-          <select id="repVolunteer"></select>
+            <div style="margin-top:12px;">
+              <label>Volunteer</label>
+              <select id="repVolunteer"></select>
+            </div>
+          </div>
         </div>
 
         <div class="divider"></div>
@@ -1396,7 +1433,6 @@
         <div class="divider"></div>
 
         <div class="list" id="repPreview"></div>
-
         <div id="repDetail" style="margin-top:12px;"></div>
       `, [
         mkBtn(fromAdmin ? "Back" : "Close", "ghost", ()=>{
@@ -1410,7 +1446,26 @@
       repVolunteer.innerHTML = reportVolunteerOptionsHTML("ALL");
       repVolunteer.value = "ALL";
 
-      function computeTotals(prodSel, lastQuery, volunteerId){
+      $("repSelectAll").onclick = ()=>{
+        repProdSet.clear();
+        state.productions.forEach(p=>repProdSet.add(p));
+        setChecksFromProdSet("repProdBox", repProdSet);
+        renderPreview();
+      };
+      $("repSelectNone").onclick = ()=>{
+        repProdSet.clear();
+        setChecksFromProdSet("repProdBox", repProdSet);
+        renderPreview();
+      };
+
+      function selectedProds(){
+        const set = prodSetFromChecks("repProdBox");
+        repProdSet.clear();
+        set.forEach(p=>repProdSet.add(p));
+        return repProdSet;
+      }
+
+      function computeTotals(prodSet, fromYmd, toYmd, lastQuery, volunteerId){
         const totals = new Map();
         function ensureRow(v){
           if(!totals.has(v.id)){
@@ -1421,8 +1476,12 @@
 
         const allRelevantForDays = state.logs
           .filter(l => l.signIn)
-          .filter(l => prodSel === "ALL" || l.production === prodSel)
-          .filter(l => volunteerId === "ALL" || l.volunteerId === volunteerId);
+          .filter(l => prodSet.size === 0 ? false : prodSet.has(l.production))
+          .filter(l => volunteerId === "ALL" || l.volunteerId === volunteerId)
+          .filter(l => {
+            const d = l.workDate || ymdLocalFromMs(l.signIn);
+            return inYmdRange(d, fromYmd, toYmd);
+          });
 
         allRelevantForDays.forEach(l=>{
           const v = findVolunteer(l.volunteerId);
@@ -1435,8 +1494,12 @@
 
         const logs = state.logs
           .filter(l => l.signOut && typeof l.hoursRoundedUp === "number")
-          .filter(l => prodSel === "ALL" || l.production === prodSel)
-          .filter(l => volunteerId === "ALL" || l.volunteerId === volunteerId);
+          .filter(l => prodSet.size === 0 ? false : prodSet.has(l.production))
+          .filter(l => volunteerId === "ALL" || l.volunteerId === volunteerId)
+          .filter(l => {
+            const d = l.workDate || ymdLocalFromMs(l.signIn);
+            return inYmdRange(d, fromYmd, toYmd);
+          });
 
         logs.forEach(l=>{
           const v = findVolunteer(l.volunteerId);
@@ -1451,8 +1514,21 @@
         return Array.from(totals.values()).sort((a,b)=> (a.v.last+a.v.first).localeCompare(b.v.last+b.v.first));
       }
 
+      function getSessionsForVolunteerFiltered(volunteerId, prodSet, fromYmd, toYmd){
+        return state.logs
+          .filter(l => l.volunteerId === volunteerId)
+          .filter(l => prodSet.size === 0 ? false : prodSet.has(l.production))
+          .filter(l => {
+            const d = l.workDate || (l.signIn ? ymdLocalFromMs(l.signIn) : null);
+            return inYmdRange(d, fromYmd, toYmd);
+          })
+          .slice()
+          .sort((a,b)=> (b.signIn||0) - (a.signIn||0));
+      }
+
       function renderDetail(){
-        const prodSel = $("repProd").value;
+        const prodSet = selectedProds();
+        const { from, to } = clampYmdRange($("repFrom").value, $("repTo").value);
         const volunteerId = $("repVolunteer").value;
         const detail = $("repDetail");
         detail.innerHTML = "";
@@ -1462,7 +1538,7 @@
         const v = findVolunteer(volunteerId);
         if(!v) return;
 
-        const sessions = getSessionsForVolunteer(volunteerId, prodSel);
+        const sessions = getSessionsForVolunteerFiltered(volunteerId, prodSet, from, to);
         const completed = sessions.filter(s => s.signOut && typeof s.hoursRoundedUp === "number");
         const total = completed.reduce((sum,s)=> sum + s.hoursRoundedUp, 0);
 
@@ -1471,7 +1547,8 @@
           byProd.set(s.production, (byProd.get(s.production)||0) + s.hoursRoundedUp);
         });
 
-        const byProdRows = (prodSel === "ALL" ? state.productions : [prodSel]).map(p=>{
+        const prodCols = Array.from(prodSet).sort((a,b)=>a.localeCompare(b));
+        const byProdRows = prodCols.map(p=>{
           const hrs = byProd.get(p) || 0;
           return `<tr><td>${escapeHtml(p)}</td><td class="rightTxt"><b>${hrs.toFixed(1)}</b></td></tr>`;
         }).join("");
@@ -1480,9 +1557,11 @@
           const inTxt = s.signIn ? formatDateTime(s.signIn) : "—";
           const outTxt = s.signOut ? formatDateTime(s.signOut) : "OPEN";
           const hrs = (s.signOut && typeof s.hoursRoundedUp === "number") ? s.hoursRoundedUp.toFixed(1) : "—";
+          const wd = s.workDate || (s.signIn ? ymdLocalFromMs(s.signIn) : "—");
           return `
             <tr>
               <td>${escapeHtml(s.production || "—")}</td>
+              <td class="mono">${escapeHtml(wd)}</td>
               <td class="mono">${escapeHtml(inTxt)}</td>
               <td class="mono">${escapeHtml(outTxt)}</td>
               <td class="rightTxt"><b>${escapeHtml(hrs)}</b></td>
@@ -1490,14 +1569,20 @@
           `;
         }).join("");
 
+        const rangeTxt =
+          (from || to)
+            ? `Date range: <b>${escapeHtml(from || "…")}</b> to <b>${escapeHtml(to || "…")}</b>`
+            : `Date range: <b>All time</b>`;
+
         detail.innerHTML = `
           <div class="divider"></div>
           <div class="name" style="font-size:18px; font-weight:900;">${escapeHtml(v.first)} ${escapeHtml(v.last)} — Details</div>
+          <div class="hint" style="margin-top:6px;">${rangeTxt}</div>
 
           <table class="simple">
             <thead><tr><th>Production</th><th class="rightTxt">Hours</th></tr></thead>
             <tbody>
-              ${byProdRows}
+              ${byProdRows || `<tr><td colspan="2">No completed sessions.</td></tr>`}
               <tr>
                 <td><b>Total</b></td>
                 <td class="rightTxt"><b>${total.toFixed(1)}</b></td>
@@ -1509,30 +1594,55 @@
             <thead>
               <tr>
                 <th>Production</th>
+                <th>Work Date</th>
                 <th>Sign In</th>
                 <th>Sign Out</th>
                 <th class="rightTxt">Rounded Hrs</th>
               </tr>
             </thead>
             <tbody>
-              ${sessionRows || `<tr><td colspan="4">No sessions found.</td></tr>`}
+              ${sessionRows || `<tr><td colspan="5">No sessions found.</td></tr>`}
             </tbody>
           </table>
         `;
       }
 
       function renderPreview(){
-        const prodSel = $("repProd").value;
+        const prodSet = selectedProds();
+        const { from, to } = clampYmdRange($("repFrom").value, $("repTo").value);
+
         const lastQuery = norm($("repLast").value).toLowerCase();
         const volunteerId = $("repVolunteer").value;
 
-        const rows = computeTotals(prodSel, lastQuery, volunteerId);
+        const rows = computeTotals(prodSet, from, to, lastQuery, volunteerId);
 
         const prev = $("repPreview");
         prev.innerHTML = "";
 
+        const prodsLabel = prodSet.size
+          ? Array.from(prodSet).sort((a,b)=>a.localeCompare(b)).join(", ")
+          : "None selected";
+
+        const rangeLabel = (from || to)
+          ? `${from || "…"} to ${to || "…"}`
+          : "All time";
+
+        prev.innerHTML = `
+          <div class="hint">
+            <b>Productions:</b> ${escapeHtml(prodsLabel)}<br/>
+            <b>Date range:</b> ${escapeHtml(rangeLabel)}
+          </div>
+          <div class="divider"></div>
+        `;
+
+        if(prodSet.size === 0){
+          prev.innerHTML += `<div class="hint">Select at least one production to run a report.</div>`;
+          $("repDetail").innerHTML = "";
+          return;
+        }
+
         if(rows.length === 0){
-          prev.innerHTML = `<div class="hint">No completed sessions found for this filter yet.</div>`;
+          prev.innerHTML += `<div class="hint">No completed sessions found for this filter yet.</div>`;
           renderDetail();
           return;
         }
@@ -1545,8 +1655,7 @@
             <div>
               <div class="name">${escapeHtml(r.v.first)} ${escapeHtml(r.v.last)}</div>
               <div class="meta">
-                ${prodSel === "ALL" ? "All productions" : escapeHtml(prodSel)}
-                • ${r.totalHours.toFixed(1)} hrs • $${value.toFixed(0)}
+                ${r.totalHours.toFixed(1)} hrs • $${value.toFixed(0)}
                 • ${r.days.size} day${r.days.size===1?"":"s"}
               </div>
             </div>
@@ -1566,32 +1675,55 @@
         renderDetail();
       }
 
-      $("repProd").addEventListener("change", renderPreview);
+      $("repProdBox").addEventListener("change", renderPreview);
+      $("repFrom").addEventListener("change", renderPreview);
+      $("repTo").addEventListener("change", renderPreview);
       $("repLast").addEventListener("input", renderPreview);
       $("repVolunteer").addEventListener("change", renderPreview);
 
       renderPreview();
+
+      openReports._getFilters = () => {
+        const prodSet = selectedProds();
+        const { from, to } = clampYmdRange($("repFrom").value, $("repTo").value);
+        const lastQuery = norm($("repLast").value).toLowerCase();
+        const volunteerId = $("repVolunteer").value;
+        return { prodSet, from, to, lastQuery, volunteerId };
+      };
       openReports._computeTotals = computeTotals;
     }
 
+    // UPDATED PDF generator to use new report filters
     function generatePrintableReport(){
-      const prodSel = $("repProd").value;
-      const lastQuery = norm($("repLast").value).toLowerCase();
-      const volunteerId = $("repVolunteer").value;
+      if(!openReports._getFilters){ toast("Open Reports first."); return; }
 
-      const rows = openReports._computeTotals(prodSel, lastQuery, volunteerId);
+      const { prodSet, from, to, lastQuery, volunteerId } = openReports._getFilters();
+
+      if(!prodSet || prodSet.size === 0){
+        toast("Select at least one production.");
+        return;
+      }
+
+      const rows = openReports._computeTotals(prodSet, from, to, lastQuery, volunteerId);
 
       const now = new Date();
-      const title = prodSel === "ALL" ? "All Productions" : prodSel;
+      const prodCols = Array.from(prodSet).sort((a,b)=>a.localeCompare(b));
+      const title = prodCols.length === state.productions.length
+        ? "All Productions"
+        : prodCols.join(", ");
+
+      const rangeLabel = (from || to)
+        ? `${from || "…"} to ${to || "…"}`
+        : "All time";
 
       const styles = `
         <style>
           body{ font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 28px; color:#111; }
           h1{ margin: 0 0 6px; letter-spacing:.04em; text-transform: uppercase; }
-          .sub{ color:#444; margin-bottom: 16px; }
-          .meta{ color:#444; font-size: 12px; margin-bottom: 16px; }
+          .sub{ color:#444; margin-bottom: 10px; }
+          .meta{ color:#444; font-size: 12px; margin-bottom: 16px; line-height:1.4; }
           table{ width:100%; border-collapse: collapse; margin-top: 10px; }
-          th, td{ border:1px solid #ccc; padding: 8px; font-size: 12px; }
+          th, td{ border:1px solid #ccc; padding: 8px; font-size: 12px; vertical-align: top; }
           th{ background:#f3f3f3; text-align:left; }
           .right{ text-align:right; }
           .totals{ margin-top: 14px; font-size: 13px; }
@@ -1600,10 +1732,6 @@
           @media print{ body{ margin: 14mm; } }
         </style>
       `;
-
-      let prodCols = [];
-      if(prodSel === "ALL"){ prodCols = [...state.productions]; }
-      else { prodCols = [prodSel]; }
 
       let grandHours = 0;
 
@@ -1655,7 +1783,8 @@
           <h1>RiseUp Theatre Company</h1>
           <div class="sub">Volunteer Hours Report — <b>${escapeHtml(title)}</b>${volunteerSub}</div>
           <div class="meta">
-            Generated: ${now.toLocaleString()}
+            <b>Date range:</b> ${escapeHtml(rangeLabel)}<br/>
+            <b>Generated:</b> ${now.toLocaleString()}
           </div>
 
           <table>
@@ -2019,4 +2148,3 @@
   </script>
 </body>
 </html>
-
